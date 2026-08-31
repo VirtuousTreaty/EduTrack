@@ -8,141 +8,223 @@ interface AcademicRecordsProps {
 
 const AcademicRecords: React.FC<AcademicRecordsProps> = ({ records }) => {
   const calculateOverallGPA = () => {
-    if (records.length === 0) return 0;
+    if (records.length === 0) return '0.00';
+
     const total = records.reduce((sum, record) => sum + record.gpa, 0);
     return (total / records.length).toFixed(2);
   };
 
   const getTotalCredits = () => {
-    return records.reduce((total, record) => 
-      total + record.subjects.reduce((sum, subject) => sum + subject.credits, 0), 0
+    return records.reduce(
+      (total, record) =>
+        total +
+        record.subjects.reduce((sum, subject) => sum + subject.credits, 0),
+      0
     );
   };
 
   const getGradeColor = (grade: string) => {
     const gradeColors: { [key: string]: string } = {
-      'A': 'bg-green-100 text-green-800',
-      'A-': 'bg-green-100 text-green-700',
-      'B+': 'bg-blue-100 text-blue-800',
-      'B': 'bg-blue-100 text-blue-700',
-      'B-': 'bg-yellow-100 text-yellow-800',
-      'C+': 'bg-yellow-100 text-yellow-700',
-      'C': 'bg-orange-100 text-orange-800',
-      'D': 'bg-red-100 text-red-800',
-      'F': 'bg-red-200 text-red-900'
+      A: 'bg-green-50 text-green-700 border-green-200',
+      'A-': 'bg-green-50 text-green-700 border-green-200',
+      'B+': 'bg-blue-50 text-blue-700 border-blue-200',
+      B: 'bg-blue-50 text-blue-700 border-blue-200',
+      'B-': 'bg-yellow-50 text-yellow-700 border-yellow-200',
+      'C+': 'bg-yellow-50 text-yellow-700 border-yellow-200',
+      C: 'bg-orange-50 text-orange-700 border-orange-200',
+      D: 'bg-red-50 text-red-700 border-red-200',
+      F: 'bg-red-100 text-red-800 border-red-200',
     };
-    return gradeColors[grade] || 'bg-gray-100 text-gray-800';
+
+    return (
+      gradeColors[grade] ||
+      'bg-gray-50 text-gray-700 border-gray-200'
+    );
   };
 
   return (
     <div className="p-6">
-      {/* Summary Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-        <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg p-6 border border-blue-200">
-          <div className="flex items-center">
-            <TrendingUp className="w-8 h-8 text-blue-600 mr-3" />
-            <div>
-              <p className="text-sm font-medium text-blue-600">Overall GPA</p>
-              <p className="text-2xl font-bold text-blue-900">{calculateOverallGPA()}</p>
-            </div>
-          </div>
-        </div>
-
-        <div className="bg-gradient-to-r from-green-50 to-emerald-50 rounded-lg p-6 border border-green-200">
-          <div className="flex items-center">
-            <BookOpen className="w-8 h-8 text-green-600 mr-3" />
-            <div>
-              <p className="text-sm font-medium text-green-600">Total Credits</p>
-              <p className="text-2xl font-bold text-green-900">{getTotalCredits()}</p>
-            </div>
-          </div>
-        </div>
-
-        <div className="bg-gradient-to-r from-purple-50 to-violet-50 rounded-lg p-6 border border-purple-200">
-          <div className="flex items-center">
-            <Award className="w-8 h-8 text-purple-600 mr-3" />
-            <div>
-              <p className="text-sm font-medium text-purple-600">Semesters</p>
-              <p className="text-2xl font-bold text-purple-900">{records.length}</p>
-            </div>
-          </div>
-        </div>
+      {/* Section Header */}
+      <div className="mb-6">
+        <h3 className="text-xl font-bold text-gray-900">
+          Academic Records
+        </h3>
+        <p className="text-sm text-gray-500 mt-1">
+          Track your academic performance and semester-wise results
+        </p>
       </div>
 
-      {/* Academic Records */}
-      <div className="space-y-6">
-        <h3 className="text-xl font-bold text-gray-900">Academic Records</h3>
-        
-        {records.map((record) => (
-          <div key={record.id} className="border border-gray-200 rounded-lg p-6 hover:shadow-md transition-shadow">
-            <div className="flex items-center justify-between mb-4">
-              <div>
-                <h4 className="text-lg font-semibold text-gray-900">
-                  {record.semester} {record.year}
-                </h4>
-                <p className="text-sm text-gray-600">
-                  {record.subjects.length} subjects • {record.subjects.reduce((sum, s) => sum + s.credits, 0)} credits
-                </p>
-              </div>
-              <div className="text-right">
-                <div className="flex items-center space-x-2">
-                  <span className="text-sm text-gray-600">Semester GPA:</span>
-                  <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-800">
-                    {record.gpa.toFixed(2)}
-                  </span>
-                </div>
-              </div>
+      {/* Summary Stats */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-5 mb-8">
+
+        {/* Overall GPA */}
+        <div className="bg-white border border-gray-200 rounded-xl p-5 hover:border-blue-200 transition-colors">
+          <div className="flex items-center gap-4">
+            <div className="w-11 h-11 rounded-lg bg-blue-50 flex items-center justify-center">
+              <TrendingUp className="w-5 h-5 text-blue-600" />
             </div>
 
-            {/* Subjects Table */}
-            <div className="overflow-x-auto">
-              <table className="min-w-full divide-y divide-gray-200">
-                <thead className="bg-gray-50">
-                  <tr>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Course Code
-                    </th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Course Name
-                    </th>
-                    <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Credits
-                    </th>
-                    <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Grade
-                    </th>
-                    <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Points
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className="bg-white divide-y divide-gray-200">
-                  {record.subjects.map((subject, index) => (
-                    <tr key={index} className="hover:bg-gray-50">
-                      <td className="px-4 py-4 text-sm font-medium text-gray-900">
-                        {subject.code}
-                      </td>
-                      <td className="px-4 py-4 text-sm text-gray-900">
-                        {subject.name}
-                      </td>
-                      <td className="px-4 py-4 text-sm text-gray-900 text-center">
-                        {subject.credits}
-                      </td>
-                      <td className="px-4 py-4 text-center">
-                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getGradeColor(subject.grade)}`}>
-                          {subject.grade}
-                        </span>
-                      </td>
-                      <td className="px-4 py-4 text-sm text-gray-900 text-center font-medium">
-                        {subject.points.toFixed(1)}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+            <div>
+              <p className="text-sm font-medium text-gray-500">
+                Overall GPA
+              </p>
+              <p className="text-2xl font-bold text-gray-900 mt-1">
+                {calculateOverallGPA()}
+              </p>
             </div>
           </div>
-        ))}
+        </div>
+
+        {/* Total Credits */}
+        <div className="bg-white border border-gray-200 rounded-xl p-5 hover:border-blue-200 transition-colors">
+          <div className="flex items-center gap-4">
+            <div className="w-11 h-11 rounded-lg bg-blue-50 flex items-center justify-center">
+              <BookOpen className="w-5 h-5 text-blue-600" />
+            </div>
+
+            <div>
+              <p className="text-sm font-medium text-gray-500">
+                Total Credits
+              </p>
+              <p className="text-2xl font-bold text-gray-900 mt-1">
+                {getTotalCredits()}
+              </p>
+            </div>
+          </div>
+        </div>
+
+        {/* Semesters */}
+        <div className="bg-white border border-gray-200 rounded-xl p-5 hover:border-blue-200 transition-colors">
+          <div className="flex items-center gap-4">
+            <div className="w-11 h-11 rounded-lg bg-blue-50 flex items-center justify-center">
+              <Award className="w-5 h-5 text-blue-600" />
+            </div>
+
+            <div>
+              <p className="text-sm font-medium text-gray-500">
+                Semesters
+              </p>
+              <p className="text-2xl font-bold text-gray-900 mt-1">
+                {records.length}
+              </p>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      {/* Semester Records */}
+      <div className="space-y-5">
+
+        {records.map((record) => {
+          const totalCredits = record.subjects.reduce(
+            (sum, subject) => sum + subject.credits,
+            0
+          );
+
+          return (
+            <div
+              key={record.id}
+              className="bg-white border border-gray-200 rounded-xl overflow-hidden hover:border-blue-300 hover:shadow-sm"
+            >
+              {/* Semester Header */}
+              <div className="px-6 py-5 border-b border-gray-200">
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+
+                  <div>
+                    <h4 className="text-lg font-semibold text-gray-900">
+                      {record.semester} {record.year}
+                    </h4>
+
+                    <p className="text-sm text-gray-500 mt-1">
+                      {record.subjects.length} subjects
+                      <span className="mx-2">•</span>
+                      {totalCredits} credits
+                    </p>
+                  </div>
+
+                  <div className="flex items-center gap-3">
+                    <span className="text-sm text-gray-500">
+                      Semester GPA
+                    </span>
+
+                    <span className="inline-flex items-center px-3 py-1.5 rounded-lg bg-blue-50 text-blue-700 border border-blue-100 text-sm font-semibold">
+                      {record.gpa.toFixed(2)}
+                    </span>
+                  </div>
+
+                </div>
+              </div>
+
+              {/* Subjects Table */}
+              <div className="overflow-x-auto">
+                <table className="min-w-full">
+
+                  <thead className="bg-gray-50 border-b border-gray-200">
+                    <tr>
+                      <th className="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                        Course Code
+                      </th>
+
+                      <th className="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                        Course Name
+                      </th>
+
+                      <th className="px-6 py-3 text-center text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                        Credits
+                      </th>
+
+                      <th className="px-6 py-3 text-center text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                        Grade
+                      </th>
+
+                      <th className="px-6 py-3 text-center text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                        Points
+                      </th>
+                    </tr>
+                  </thead>
+
+                  <tbody className="divide-y divide-gray-100">
+                    {record.subjects.map((subject, index) => (
+                      <tr
+                        key={index}
+                        className="hover:bg-blue-50/40 transition-colors"
+                      >
+                        <td className="px-6 py-4 text-sm font-medium text-gray-900">
+                          {subject.code}
+                        </td>
+
+                        <td className="px-6 py-4 text-sm text-gray-700">
+                          {subject.name}
+                        </td>
+
+                        <td className="px-6 py-4 text-sm text-gray-700 text-center">
+                          {subject.credits}
+                        </td>
+
+                        <td className="px-6 py-4 text-center">
+                          <span
+                            className={`inline-flex items-center justify-center min-w-[38px] px-2.5 py-1 rounded-md border text-xs font-semibold ${getGradeColor(
+                              subject.grade
+                            )}`}
+                          >
+                            {subject.grade}
+                          </span>
+                        </td>
+
+                        <td className="px-6 py-4 text-sm text-gray-900 text-center font-semibold">
+                          {subject.points.toFixed(1)}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+
+                </table>
+              </div>
+            </div>
+          );
+        })}
+
       </div>
     </div>
   );

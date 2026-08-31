@@ -7,14 +7,25 @@ import AcademicRecords from './AcademicRecords';
 import CertificateUpload from './CertificateUpload';
 import ResumeGenerator from './ResumeGenerator';
 import ActivityCharts from './ActivityCharts';
-import { BookOpen, Award, FileText, BarChart3, Upload, User } from 'lucide-react';
+
+import {
+  BookOpen,
+  Award,
+  FileText,
+  BarChart3,
+  User,
+  CalendarDays,
+  Clock3,
+  CheckCircle2,
+} from 'lucide-react';
 
 const StudentDashboard: React.FC = () => {
   const { user } = useAuth();
   const [activeTab, setActiveTab] = useState('overview');
   
-  // In a real app, this would come from the authenticated user's data
-  const studentData: Student = mockStudents.find(s => s.email === user?.email) || mockStudents[0];
+
+  const studentData: Student =
+    mockStudents.find(s => s.email === user?.email) || mockStudents[0];
 
   const tabs = [
     { id: 'overview', name: 'Overview', icon: User },
@@ -24,24 +35,28 @@ const StudentDashboard: React.FC = () => {
     { id: 'analytics', name: 'Analytics', icon: BarChart3 },
   ];
 
-  const getTabColor = (tabId: string) => {
-    return activeTab === tabId
-      ? 'bg-blue-500 text-white'
-      : 'bg-white text-gray-700 hover:bg-gray-50';
-  };
-
   const renderTabContent = () => {
     switch (activeTab) {
       case 'overview':
         return <StudentOverview student={studentData} />;
+
       case 'academic':
         return <AcademicRecords records={studentData.academicRecords} />;
+
       case 'certificates':
-        return <CertificateUpload studentId={studentData.id} certificates={studentData.certificates} />;
+        return (
+          <CertificateUpload
+            studentId={studentData.id}
+            certificates={studentData.certificates}
+          />
+        );
+
       case 'resume':
         return <ResumeGenerator student={studentData} />;
+
       case 'analytics':
         return <ActivityCharts student={studentData} />;
+
       default:
         return <StudentOverview student={studentData} />;
     }
@@ -50,140 +65,404 @@ const StudentDashboard: React.FC = () => {
   return (
     <Layout title="Student Dashboard">
       <div className="space-y-6">
+
         {/* Tab Navigation */}
-        <div className="flex space-x-1 bg-gray-100 p-1 rounded-lg overflow-x-auto">
-          {tabs.map((tab) => {
-            const Icon = tab.icon;
-            return (
-              <button
-                key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
-                className={`flex items-center space-x-2 px-4 py-2 rounded-md font-medium transition-all whitespace-nowrap ${getTabColor(tab.id)}`}
-              >
-                <Icon className="w-4 h-4" />
-                <span className="hidden sm:inline">{tab.name}</span>
-              </button>
-            );
-          })}
+        <div className="border-b border-slate-200">
+          <div className="flex gap-1 overflow-x-auto">
+            {tabs.map(tab => {
+              const Icon = tab.icon;
+              const isActive = activeTab === tab.id;
+
+              return (
+                <button
+                  key={tab.id}
+                  onClick={() => setActiveTab(tab.id)}
+                  className={`
+                    flex items-center gap-2 px-4 py-3 text-sm font-medium
+                    whitespace-nowrap border-b-2 transition-colors
+                    ${isActive
+                      ? 'border-blue-600 text-blue-600'
+                      : 'border-transparent text-slate-500 hover:text-slate-800 hover:border-slate-300'
+                    }
+                  `}
+                >
+                  <Icon className="w-4 h-4" />
+                  {tab.name}
+                </button>
+              );
+            })}
+          </div>
         </div>
 
         {/* Tab Content */}
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200">
-          {renderTabContent()}
-        </div>
+        <div>{renderTabContent()}</div>
       </div>
     </Layout>
   );
 };
 
+
+
 const StudentOverview: React.FC<{ student: Student }> = ({ student }) => {
   const totalActivities = student.activities.length;
   const totalCertificates = student.certificates.length;
-  const approvedCertificates = student.certificates.filter(c => c.status === 'approved').length;
-  const totalHours = student.activities.reduce((sum, activity) => sum + activity.hours, 0);
+  
+
+  const approvedCertificates = student.certificates.filter(
+    certificate => certificate.status === 'approved'
+  ).length;
+
+  const totalHours = student.activities.reduce(
+    (sum, activity) => sum + activity.hours,
+    0
+  );
 
   return (
-    <div className="p-6">
-      <div className="flex items-start space-x-6 mb-8">
-        <div className="flex-shrink-0">
+    <div className="space-y-6">
+
+      {/* Profile Header */}
+      <section className="bg-white border border-slate-200 rounded-xl p-6 hover:border-blue-300 hover:shadow-sm">
+        <div className="flex flex-col md:flex-row md:items-center gap-5">
+
+          {/* Avatar */}
           <img
-            src={student.avatar || 'https://images.pexels.com/photos/1239291/pexels-photo-1239291.jpeg?auto=compress&cs=tinysrgb&w=400'}
+            src={
+              student.avatar ||
+              'https://images.pexels.com/photos/1239291/pexels-photo-1239291.jpeg?auto=compress&cs=tinysrgb&w=400'
+            }
             alt={student.name}
-            className="w-24 h-24 rounded-full object-cover border-4 border-blue-200"
+            className="w-20 h-20 rounded-full object-cover border-2 border-slate-200"
           />
-        </div>
-        <div className="flex-1">
-          <h3 className="text-2xl font-bold text-gray-900">{student.name}</h3>
-          <p className="text-lg text-gray-600">{student.course} - Year {student.year}</p>
-          <p className="text-gray-500">{student.university}</p>
-          <div className="mt-2 flex items-center space-x-4">
-            <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-800">
-              GPA: {student.gpa}
-            </span>
-            <span className="text-gray-500">{student.email}</span>
-          </div>
-        </div>
-      </div>
 
-      {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-        <div className="bg-gradient-to-r from-blue-500 to-indigo-600 rounded-lg p-6 text-white">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-blue-100">Current GPA</p>
-              <p className="text-3xl font-bold">{student.gpa}</p>
+          {/* Student Details */}
+          <div className="flex-1">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+              <div>
+                <p className="text-sm text-blue-600 font-medium mb-1">
+                  Student Profile
+                </p>
+
+                <h2 className="text-2xl font-semibold text-slate-900">
+                  {student.name}
+                </h2>
+
+                <p className="text-slate-500 mt-1">
+                  {student.course} · Year {student.year}
+                </p>
+              </div>
+
+              <div className="flex items-center gap-2 text-sm text-slate-500">
+                <span className="w-2 h-2 rounded-full bg-green-500" />
+                Active Student
+              </div>
             </div>
-            <BookOpen className="w-8 h-8 text-blue-200" />
-          </div>
-        </div>
 
-        <div className="bg-gradient-to-r from-green-500 to-emerald-600 rounded-lg p-6 text-white">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-green-100">Certificates</p>
-              <p className="text-3xl font-bold">{approvedCertificates}/{totalCertificates}</p>
+            <div className="mt-4 flex flex-wrap gap-x-6 gap-y-2 text-sm text-slate-500">
+              <span>{student.university}</span>
+              <span>{student.email}</span>
             </div>
-            <Award className="w-8 h-8 text-green-200" />
           </div>
         </div>
+      </section>
 
-        <div className="bg-gradient-to-r from-purple-500 to-violet-600 rounded-lg p-6 text-white">
-          <div className="flex items-center justify-between">
+
+      {/* Stats */}
+      <section className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
+
+        {/* GPA */}
+        <div className="bg-white border border-slate-200 rounded-xl p-5 hover:border-blue-300 hover:shadow-sm">
+          <div className="flex items-start justify-between">
             <div>
-              <p className="text-purple-100">Activities</p>
-              <p className="text-3xl font-bold">{totalActivities}</p>
+              <p className="text-sm text-slate-500">Current GPA</p>
+              <p className="text-3xl font-semibold text-slate-900 mt-2">
+                {student.gpa}
+              </p>
             </div>
-            <BarChart3 className="w-8 h-8 text-purple-200" />
+
+            <div className="p-2.5 bg-blue-50 rounded-lg">
+              <BookOpen className="w-5 h-5 text-blue-600" />
+            </div>
           </div>
+
+          <p className="text-xs text-slate-400 mt-3">
+            Overall academic performance
+          </p>
         </div>
 
-        <div className="bg-gradient-to-r from-orange-500 to-red-600 rounded-lg p-6 text-white">
-          <div className="flex items-center justify-between">
+
+        {/* Certificates */}
+        <div className="bg-white border border-slate-200 rounded-xl p-5 hover:border-blue-300 hover:shadow-sm">
+          <div className="flex items-start justify-between">
             <div>
-              <p className="text-orange-100">Activity Hours</p>
-              <p className="text-3xl font-bold">{totalHours}</p>
+              <p className="text-sm text-slate-500">Certificates</p>
+
+              <p className="text-3xl font-semibold text-slate-900 mt-2">
+                {approvedCertificates}
+              </p>
             </div>
-            <Upload className="w-8 h-8 text-orange-200" />
+
+            <div className="p-2.5 bg-blue-50 rounded-lg">
+              <Award className="w-5 h-5 text-blue-600" />
+            </div>
           </div>
-        </div>
-      </div>
 
-      {/* Skills */}
-      <div className="mb-8">
-        <h4 className="text-lg font-semibold text-gray-900 mb-4">Skills</h4>
-        <div className="flex flex-wrap gap-2">
-          {student.skills.map((skill, index) => (
-            <span
-              key={index}
-              className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-gray-100 text-gray-800 hover:bg-gray-200 transition-colors"
-            >
-              {skill}
-            </span>
-          ))}
+          <p className="text-xs text-slate-400 mt-3">
+            {totalCertificates} total uploaded
+          </p>
         </div>
-      </div>
 
-      {/* Recent Activities */}
-      <div>
-        <h4 className="text-lg font-semibold text-gray-900 mb-4">Recent Activities</h4>
-        <div className="space-y-4">
-          {student.activities.slice(0, 3).map((activity) => (
-            <div key={activity.id} className="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
-              <div className="flex items-start justify-between">
-                <div className="flex-1">
-                  <h5 className="font-medium text-gray-900">{activity.title}</h5>
-                  <p className="text-sm text-gray-600 mt-1">{activity.description}</p>
-                  <div className="mt-2 flex items-center space-x-4 text-sm text-gray-500">
-                    <span>Type: {activity.type.replace('-', ' ').replace(/\b\w/g, l => l.toUpperCase())}</span>
-                    <span>Hours: {activity.hours}</span>
-                    <span>Date: {new Date(activity.date).toLocaleDateString()}</span>
+
+        {/* Activities */}
+        <div className="bg-white border border-slate-200 rounded-xl p-5 hover:border-blue-300 hover:shadow-sm">
+          <div className="flex items-start justify-between">
+            <div>
+              <p className="text-sm text-slate-500">Activities</p>
+
+              <p className="text-3xl font-semibold text-slate-900 mt-2">
+                {totalActivities}
+              </p>
+            </div>
+
+            <div className="p-2.5 bg-blue-50 rounded-lg">
+              <BarChart3 className="w-5 h-5 text-blue-600" />
+            </div>
+          </div>
+
+          <p className="text-xs text-slate-400 mt-3">
+            Academic and extracurricular
+          </p>
+        </div>
+
+
+        {/* Hours */}
+        <div className="bg-white border border-slate-200 rounded-xl p-5 hover:border-blue-300 hover:shadow-sm">
+          <div className="flex items-start justify-between">
+            <div>
+              <p className="text-sm text-slate-500">Activity Hours</p>
+
+              <p className="text-3xl font-semibold text-slate-900 mt-2">
+                {totalHours}
+              </p>
+            </div>
+
+            <div className="p-2.5 bg-blue-50 rounded-lg">
+              <Clock3 className="w-5 h-5 text-blue-600" />
+            </div>
+          </div>
+
+          <p className="text-xs text-slate-400 mt-3">
+            Total recorded hours
+          </p>
+        </div>
+
+      </section>
+
+
+      {/* Main Content */}
+      <section className="grid grid-cols-1 xl:grid-cols-3 gap-6">
+
+        {/* Recent Activities */}
+        <div className="xl:col-span-2 bg-white border border-slate-200 rounded-xl hover:border-blue-300 hover:shadow-sm">
+
+          <div className="flex items-center justify-between px-6 py-5 border-b border-slate-200">
+            <div>
+              <h3 className="font-semibold text-slate-900">
+                Recent Activities
+              </h3>
+
+              <p className="text-sm text-slate-500 mt-1">
+                Your latest academic and extracurricular activities
+              </p>
+            </div>
+          </div>
+
+
+          <div className="divide-y divide-slate-100">
+
+            {student.activities.slice(0, 4).map(activity => (
+
+              <div
+                key={activity.id}
+                className="px-6 py-5 hover:bg-slate-50 transition-colors"
+              >
+                <div className="flex gap-4">
+
+                  <div className="flex-shrink-0 w-9 h-9 rounded-lg bg-blue-50 flex items-center justify-center">
+                    <CalendarDays className="w-4 h-4 text-blue-600" />
+                  </div>
+
+                  <div className="flex-1 min-w-0">
+
+                    <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2">
+
+                      <div>
+                        <h4 className="font-medium text-slate-900">
+                          {activity.title}
+                        </h4>
+
+                        <p className="text-sm text-slate-500 mt-1 line-clamp-2">
+                          {activity.description}
+                        </p>
+                      </div>
+
+                      <span className="text-xs text-slate-400 whitespace-nowrap">
+                        {new Date(activity.date).toLocaleDateString()}
+                      </span>
+
+                    </div>
+
+                    <div className="flex flex-wrap items-center gap-4 mt-3 text-xs text-slate-500">
+
+                      <span>
+                        {activity.type
+                          .replace('-', ' ')
+                          .replace(/\b\w/g, letter => letter.toUpperCase())}
+                      </span>
+
+                      <span className="flex items-center gap-1">
+                        <Clock3 className="w-3.5 h-3.5" />
+                        {activity.hours} hours
+                      </span>
+
+                    </div>
+
                   </div>
                 </div>
               </div>
-            </div>
-          ))}
+
+            ))}
+
+          </div>
         </div>
-      </div>
+
+
+        {/* Right Column */}
+        <div className="space-y-6">
+
+          {/* Skills */}
+          <div className="bg-white border border-slate-200 rounded-xl p-6 hover:border-blue-300 hover:shadow-sm">
+
+            <div className="flex items-center justify-between mb-5">
+              <div>
+                <h3 className="font-semibold text-slate-900">
+                  Skills
+                </h3>
+
+                <p className="text-sm text-slate-500 mt-1">
+                  Your current skill set
+                </p>
+              </div>
+
+              <FileText className="w-5 h-5 text-slate-400" />
+            </div>
+
+            <div className="flex flex-wrap gap-2">
+
+              {student.skills.map((skill, index) => (
+                <span
+                  key={index}
+                  className="px-3 py-1.5 text-sm text-slate-700 bg-slate-100 rounded-md"
+                >
+                  {skill}
+                </span>
+              ))}
+
+            </div>
+          </div>
+
+
+          {/* Certificate Status */}
+          <div className="bg-white border border-slate-200 rounded-xl p-6 hover:border-blue-300 hover:shadow-sm">
+
+            <div className="flex items-center gap-3 mb-5">
+
+              <div className="p-2 bg-blue-50 rounded-lg">
+                <Award className="w-5 h-5 text-blue-600" />
+              </div>
+
+              <div>
+                <h3 className="font-semibold text-slate-900">
+                  Certificate Status
+                </h3>
+
+                <p className="text-sm text-slate-500">
+                  Verification overview
+                </p>
+              </div>
+
+            </div>
+
+
+            <div className="space-y-4">
+
+              <div className="flex items-center justify-between">
+                <span className="text-sm text-slate-600">
+                  Approved
+                </span>
+
+                <span className="flex items-center gap-1.5 text-sm font-medium text-green-600">
+                  <CheckCircle2 className="w-4 h-4" />
+                  {approvedCertificates}
+                </span>
+              </div>
+
+
+              <div className="flex items-center justify-between">
+                <span className="text-sm text-slate-600">
+                  Pending
+                </span>
+
+                <span className="text-sm font-medium text-amber-600">
+                  {
+                    student.certificates.filter(
+                      certificate => certificate.status === 'pending'
+                    ).length
+                  }
+                </span>
+              </div>
+
+
+              <div className="pt-4 border-t border-slate-100">
+
+                <div className="flex items-center justify-between text-sm mb-2">
+                  <span className="text-slate-500">
+                    Verification progress
+                  </span>
+
+                  <span className="font-medium text-slate-700">
+                    {totalCertificates > 0
+                      ? Math.round(
+                        (approvedCertificates / totalCertificates) * 100
+                      )
+                      : 0}
+                    %
+                  </span>
+                </div>
+
+                <div className="h-2 bg-slate-100 rounded-full overflow-hidden">
+
+                  <div
+                    className="h-full bg-blue-600 rounded-full transition-all"
+                    style={{
+                      width: `${totalCertificates > 0
+                          ? (approvedCertificates / totalCertificates) * 100
+                          : 0
+                        }%`,
+                    }}
+                  />
+
+                </div>
+
+              </div>
+
+            </div>
+
+          </div>
+
+        </div>
+
+      </section>
+
     </div>
   );
 };
