@@ -10,7 +10,7 @@ export const mockStudents: Student[] = [
     year: 3,
     gpa: 3.8,
     skills: ['JavaScript', 'React', 'Python', 'Data Analysis', 'Machine Learning'],
-    avatar: 'https://www.linkedin.com/in/anshika-middha-599a9129b/?lipi=urn%3Ali%3Apage%3Ad_flagship3_profile_view_base%3B7smZ3SzeSiquzbOCWEUBsA%3D%3D    ',
+    avatar: 'https://media.licdn.com/dms/image/v2/D5603AQH0suTL3pgmUA/profile-displayphoto-crop_800_800/B56Zp7do.6JkAI-/0/1763007961794?e=1790208000&v=beta&t=AslXXhb3wwSHQocEbTiYRpkyKEcoBvjNR1N-oHJ8aN8',
     academicRecords: [
       {
         id: 'ar1',
@@ -86,7 +86,7 @@ export const mockStudents: Student[] = [
     year: 2,
     gpa: 3.6,
     skills: ['ML', 'MATLAB', 'Python', 'Project Management'],
-    avatar: 'https://i.pinimg.com/736x/86/a3/b2/86a3b24b60c1aa885bfd7e7e688db5df.jpg',
+    avatar: 'https://media.licdn.com/dms/image/v2/D5603AQGH7PSaEcS-bg/profile-displayphoto-crop_800_800/B56Zxx2dNDJAAI-/0/1771436655001?e=1790208000&v=beta&t=ttp0zqQlJt39konWKSU8hKSmsevaowmHRDSwCabcpc8',
     academicRecords: [
       {
         id: 'ar3',
@@ -132,7 +132,7 @@ export const mockStudents: Student[] = [
     year: 4,
     gpa: 3.9,
     skills: ['MERN', 'AI', 'Leadership', 'Data Analysis', 'Public Speaking'],
-    avatar: 'https://media.licdn.com/dms/image/v2/D5603AQEuR9bmSVTYYw/profile-displayphoto-scale_200_200/B56Zk03umOI0AY-/0/1757528649576?e=1766620800&v=beta&t=e01l99UUFLrlWlANBexPYID1jWaHcs7hpY2GofD35sM',
+    avatar: 'https://media.licdn.com/dms/image/v2/D5603AQEhMxkSoesCmg/profile-displayphoto-scale_400_400/B56Z9v9MVqHIAg-/0/1784289743934?e=1790208000&v=beta&t=71wc4dYfQwuDR3v0tCIpWmL9ZdevTVPEfe1tK4ge-tg',
     academicRecords: [
       {
         id: 'ar4',
