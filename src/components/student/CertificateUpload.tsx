@@ -1,13 +1,15 @@
 import React, { useState } from 'react';
 import { Certificate } from '../../types';
-import { Upload, File, Check, X, Clock, Award, AlertCircle } from 'lucide-react';
+import { Upload, File, Check, X, Clock, Award, AlertCircle, ExternalLink } from 'lucide-react';
+import { api } from '../../services/api';
 
 interface CertificateUploadProps {
   studentId: string;
   certificates: Certificate[];
+  onCertificateAdded?: () => void;
 }
 
-const CertificateUpload: React.FC<CertificateUploadProps> = ({ studentId, certificates: initialCertificates }) => {
+const CertificateUpload: React.FC<CertificateUploadProps> = ({ certificates: initialCertificates, onCertificateAdded }) => {
   const [certificates, setCertificates] = useState<Certificate[]>(initialCertificates);
   const [showUploadForm, setShowUploadForm] = useState(false);
   const [formData, setFormData] = useState({
@@ -18,10 +20,17 @@ const CertificateUpload: React.FC<CertificateUploadProps> = ({ studentId, certif
   });
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [isUploading, setIsUploading] = useState(false);
+  const [uploadError, setUploadError] = useState('');
 
   const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
+      if (file.size > 5 * 1024 * 1024) {
+        setUploadError('File size exceeds 5MB limit');
+        setSelectedFile(null);
+        return;
+      }
+      setUploadError('');
       setSelectedFile(file);
     }
   };
@@ -29,26 +38,33 @@ const CertificateUpload: React.FC<CertificateUploadProps> = ({ studentId, certif
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsUploading(true);
+    setUploadError('');
 
-    // Simulate upload delay
-    await new Promise(resolve => setTimeout(resolve, 1500));
+    try {
+      const data = new FormData();
+      data.append('title', formData.title);
+      data.append('issuer', formData.issuer);
+      data.append('dateIssued', formData.dateIssued);
+      data.append('type', formData.type);
+      if (selectedFile) {
+        data.append('file', selectedFile);
+      }
 
-    const newCertificate: Certificate = {
-      id: `cert_${Date.now()}`,
-      studentId,
-      title: formData.title,
-      issuer: formData.issuer,
-      dateIssued: formData.dateIssued,
-      status: 'pending',
-      type: formData.type,
-      fileUrl: selectedFile ? URL.createObjectURL(selectedFile) : undefined
-    };
-
-    setCertificates([...certificates, newCertificate]);
-    setFormData({ title: '', issuer: '', dateIssued: '', type: 'academic' });
-    setSelectedFile(null);
-    setShowUploadForm(false);
-    setIsUploading(false);
+      const res = await api.uploadCertificate(data);
+      if (res.success && res.certificate) {
+        setCertificates([res.certificate, ...certificates]);
+        setFormData({ title: '', issuer: '', dateIssued: '', type: 'academic' });
+        setSelectedFile(null);
+        setShowUploadForm(false);
+        if (onCertificateAdded) onCertificateAdded();
+      } else {
+        setUploadError(res.error || 'Failed to upload certificate');
+      }
+    } catch (err: any) {
+      setUploadError(err.message || 'Upload error');
+    } finally {
+      setIsUploading(false);
+    }
   };
 
   const getStatusIcon = (status: Certificate['status']) => {
@@ -140,18 +156,22 @@ const CertificateUpload: React.FC<CertificateUploadProps> = ({ studentId, certif
         <h3 className="text-xl font-bold text-gray-900">Certificates</h3>
         <button
           onClick={() => setShowUploadForm(true)}
-          className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium flex items-center space-x-2 transition-colors"
+          className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium flex items-center space-x-2 transition-colors shadow-sm"
         >
           <Upload className="w-4 h-4" />
           <span>Upload Certificate</span>
         </button>
       </div>
 
-      {/* Upload Form */}
+      {/* Upload Form Modal */}
       {showUploadForm && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-lg p-6 w-full max-w-md">
-            <h4 className="text-lg font-bold text-gray-900 mb-4">Upload Certificate</h4>
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-xl p-6 w-full max-w-md shadow-2xl border border-slate-200">
+            <div className="flex justify-between items-center mb-4">
+              <h4 className="text-lg font-bold text-gray-900">Upload Certificate Document</h4>
+              <button onClick={() => setShowUploadForm(false)} className="text-gray-400 hover:text-gray-600 text-xl font-bold">×</button>
+            </div>
+
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Title</label>
@@ -160,8 +180,8 @@ const CertificateUpload: React.FC<CertificateUploadProps> = ({ studentId, certif
                   required
                   value={formData.title}
                   onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  placeholder="Certificate title"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+                  placeholder="e.g. AWS Cloud Practitioner"
                 />
               </div>
               
@@ -172,66 +192,73 @@ const CertificateUpload: React.FC<CertificateUploadProps> = ({ studentId, certif
                   required
                   value={formData.issuer}
                   onChange={(e) => setFormData({ ...formData, issuer: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  placeholder="Issuing organization"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+                  placeholder="e.g. Amazon Web Services"
                 />
               </div>
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Date Issued</label>
-                <input
-                  type="date"
-                  required
-                  value={formData.dateIssued}
-                  onChange={(e) => setFormData({ ...formData, dateIssued: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                />
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Date Issued</label>
+                  <input
+                    type="date"
+                    required
+                    value={formData.dateIssued}
+                    onChange={(e) => setFormData({ ...formData, dateIssued: e.target.value })}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 text-sm"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Type</label>
+                  <select
+                    value={formData.type}
+                    onChange={(e) => setFormData({ ...formData, type: e.target.value as Certificate['type'] })}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 text-sm"
+                  >
+                    <option value="academic">Academic</option>
+                    <option value="co-curricular">Co-curricular</option>
+                    <option value="extracurricular">Extracurricular</option>
+                  </select>
+                </div>
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Type</label>
-                <select
-                  value={formData.type}
-                  onChange={(e) => setFormData({ ...formData, type: e.target.value as Certificate['type'] })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                >
-                  <option value="academic">Academic</option>
-                  <option value="co-curricular">Co-curricular</option>
-                  <option value="extracurricular">Extracurricular</option>
-                </select>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Certificate File</label>
-                <div className="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-md hover:border-gray-400 transition-colors">
+                <label className="block text-sm font-medium text-gray-700 mb-1">Certificate File (PDF, PNG, JPG &lt; 5MB)</label>
+                <div className="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-lg hover:border-blue-400 transition-colors bg-slate-50">
                   <div className="space-y-1 text-center">
-                    <File className="mx-auto h-12 w-12 text-gray-400" />
-                    <div className="flex text-sm text-gray-600">
-                      <label className="relative cursor-pointer bg-white rounded-md font-medium text-blue-600 hover:text-blue-500">
-                        <span>Upload a file</span>
+                    <File className="mx-auto h-10 w-10 text-gray-400" />
+                    <div className="flex text-sm text-gray-600 justify-center">
+                      <label className="relative cursor-pointer bg-white px-2 py-1 border border-gray-300 rounded-md font-medium text-blue-600 hover:text-blue-500 shadow-sm">
+                        <span>Select Certificate File</span>
                         <input
                           type="file"
                           className="sr-only"
-                          accept=".pdf,.jpg,.jpeg,.png"
+                          accept=".pdf,.jpg,.jpeg,.png,.webp"
                           onChange={handleFileSelect}
                         />
                       </label>
                     </div>
-                    <p className="text-xs text-gray-500">PDF, PNG, JPG up to 10MB</p>
                     {selectedFile && (
-                      <p className="text-sm text-green-600 font-medium">{selectedFile.name}</p>
+                      <p className="text-xs text-emerald-600 font-semibold mt-1">Selected: {selectedFile.name}</p>
                     )}
                   </div>
                 </div>
               </div>
 
-              <div className="flex space-x-3 pt-4">
+              {uploadError && (
+                <div className="p-2.5 rounded bg-rose-50 border border-rose-200 text-rose-600 text-xs text-center font-medium">
+                  {uploadError}
+                </div>
+              )}
+
+              <div className="flex space-x-3 pt-2">
                 <button
                   type="submit"
                   disabled={isUploading}
-                  className="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded-md font-medium disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                  className="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded-md font-medium disabled:opacity-50 transition-colors shadow-sm"
                 >
-                  {isUploading ? 'Uploading...' : 'Upload'}
+                  {isUploading ? 'Uploading & Saving...' : 'Submit Certificate'}
                 </button>
                 <button
                   type="button"
@@ -256,22 +283,35 @@ const CertificateUpload: React.FC<CertificateUploadProps> = ({ studentId, certif
           </div>
         ) : (
           certificates.map((cert) => (
-            <div key={cert.id} className="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
+            <div key={cert.id} className="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow bg-white">
               <div className="flex items-start justify-between">
                 <div className="flex items-start space-x-3">
                   <div className="text-2xl">{getTypeIcon(cert.type)}</div>
                   <div className="flex-1">
-                    <h5 className="font-medium text-gray-900">{cert.title}</h5>
+                    <h5 className="font-semibold text-gray-900">{cert.title}</h5>
                     <p className="text-sm text-gray-600">{cert.issuer}</p>
-                    <p className="text-sm text-gray-500">Issued: {new Date(cert.dateIssued).toLocaleDateString()}</p>
-                    <span className="inline-flex items-center mt-2 px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
-                      {cert.type.replace('-', ' ').replace(/\b\w/g, l => l.toUpperCase())}
-                    </span>
+                    <p className="text-xs text-gray-500 mt-0.5">Issued: {new Date(cert.dateIssued).toLocaleDateString()}</p>
+                    <div className="mt-2 flex items-center space-x-3">
+                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800 border border-gray-200">
+                        {cert.type.replace('-', ' ').replace(/\b\w/g, l => l.toUpperCase())}
+                      </span>
+                      {cert.fileUrl && (
+                        <a
+                          href={cert.fileUrl.startsWith('http') ? cert.fileUrl : `http://localhost:5000${cert.fileUrl}`}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="inline-flex items-center space-x-1 text-xs text-blue-600 hover:underline font-medium"
+                        >
+                          <ExternalLink className="w-3 h-3" />
+                          <span>View Attachment</span>
+                        </a>
+                      )}
+                    </div>
                   </div>
                 </div>
                 <div className="flex items-center space-x-2">
                   {getStatusIcon(cert.status)}
-                  <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border ${getStatusColor(cert.status)}`}>
+                  <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold border ${getStatusColor(cert.status)}`}>
                     {cert.status.charAt(0).toUpperCase() + cert.status.slice(1)}
                   </span>
                 </div>

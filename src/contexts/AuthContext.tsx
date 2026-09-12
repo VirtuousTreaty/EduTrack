@@ -1,12 +1,14 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { User } from '../types';
-import { currentUser } from '../data/mockData';
+import { api } from '../services/api';
 
 interface AuthContextType {
   user: User | null;
-  login: (email: string, password: string, role: 'student' | 'university' | 'company') => Promise<boolean>;
+  login: (email: string, password: string, role: 'student' | 'university' | 'company') => Promise<{ success: boolean; error?: string }>;
+  signup: (data: any) => Promise<{ success: boolean; error?: string }>;
   logout: () => void;
   isAuthenticated: boolean;
+  loading: boolean;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -22,45 +24,73 @@ export const useAuth = () => {
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const savedUser = localStorage.getItem('edutrack_user');
-    if (savedUser) {
-      setUser(JSON.parse(savedUser));
-      setIsAuthenticated(true);
+    async function checkAuthStatus() {
+      const token = localStorage.getItem('edutrack_token');
+      if (!token) {
+        setLoading(false);
+        return;
+      }
+
+      try {
+        const response = await api.getMe();
+        if (response.success && response.user) {
+          setUser(response.user);
+          setIsAuthenticated(true);
+        } else {
+          localStorage.removeItem('edutrack_token');
+        }
+      } catch (err) {
+        console.error('Failed to verify token:', err);
+        localStorage.removeItem('edutrack_token');
+      } finally {
+        setLoading(false);
+      }
     }
+
+    checkAuthStatus();
   }, []);
 
-  const login = async (email: string, password: string, role: 'student' | 'university' | 'company'): Promise<boolean> => {
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    
-    // Mock authentication - in real app, this would validate against backend
-    const mockUsers = {
-      student: { ...currentUser.student, role: 'student' as const },
-      university: currentUser.university,
-      company: currentUser.company
-    };
-
-    const userData = mockUsers[role];
-    if (userData && (email === userData.email || email.endsWith(`@${role}.edu`) || email.endsWith(`@${role}.com`))) {
-      setUser(userData as User);
-      setIsAuthenticated(true);
-      localStorage.setItem('edutrack_user', JSON.stringify(userData));
-      return true;
+  const login = async (email: string, password: string, role: 'student' | 'university' | 'company'): Promise<{ success: boolean; error?: string }> => {
+    try {
+      const response = await api.login({ email, password, role });
+      if (response.success && response.token) {
+        localStorage.setItem('edutrack_token', response.token);
+        setUser(response.user);
+        setIsAuthenticated(true);
+        return { success: true };
+      }
+      return { success: false, error: response.error || 'Invalid credentials' };
+    } catch (err: any) {
+      return { success: false, error: err.message || 'Login failed. Server error.' };
     }
-    
-    return false;
+  };
+
+  const signup = async (data: any): Promise<{ success: boolean; error?: string }> => {
+    try {
+      const response = await api.signup(data);
+      if (response.success && response.token) {
+        localStorage.setItem('edutrack_token', response.token);
+        setUser(response.user);
+        setIsAuthenticated(true);
+        return { success: true };
+      }
+      return { success: false, error: response.error || 'Registration failed' };
+    } catch (err: any) {
+      return { success: false, error: err.message || 'Signup failed. Server error.' };
+    }
   };
 
   const logout = () => {
     setUser(null);
     setIsAuthenticated(false);
-    localStorage.removeItem('edutrack_user');
+    localStorage.removeItem('edutrack_token');
   };
 
   return (
-    <AuthContext.Provider value={{ user, login, logout, isAuthenticated }}>
+    <AuthContext.Provider value={{ user, login, signup, logout, isAuthenticated, loading }}>
       {children}
     </AuthContext.Provider>
   );
