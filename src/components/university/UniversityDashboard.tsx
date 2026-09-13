@@ -19,12 +19,6 @@ const UniversityDashboard: React.FC = () => {
     { id: 'analytics', name: 'Analytics', icon: BarChart3 },
   ];
 
-  const getTabColor = (tabId: string) => {
-    return activeTab === tabId
-      ? 'bg-green-500 text-white'
-      : 'bg-white text-gray-700 hover:bg-gray-50';
-  };
-
   const renderTabContent = () => {
     switch (activeTab) {
       case 'overview':
@@ -45,23 +39,30 @@ const UniversityDashboard: React.FC = () => {
   return (
     <Layout title="University Dashboard">
       <div className="space-y-6">
-        <div className="flex space-x-1 bg-gray-100 p-1 rounded-lg overflow-x-auto">
+        <div className="border-b border-slate-200">
+          <div className="flex gap-1 overflow-x-auto">
           {tabs.map((tab) => {
             const Icon = tab.icon;
+            const isActive = activeTab === tab.id;
             return (
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
-                className={`flex items-center space-x-2 px-4 py-2 rounded-md font-medium transition-all whitespace-nowrap ${getTabColor(tab.id)}`}
+                className={`flex items-center gap-2 whitespace-nowrap border-b-2 px-4 py-3 text-sm font-medium transition-colors ${
+                  isActive
+                    ? 'border-emerald-600 text-emerald-600'
+                    : 'border-transparent text-slate-500 hover:border-slate-300 hover:text-slate-800'
+                }`}
               >
                 <Icon className="w-4 h-4" />
                 <span className="hidden sm:inline">{tab.name}</span>
               </button>
             );
           })}
+          </div>
         </div>
 
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200">
+        <div>
           {renderTabContent()}
         </div>
       </div>

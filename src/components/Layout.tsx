@@ -84,7 +84,7 @@ const Layout: React.FC<LayoutProps> = ({ children, title }) => {
 
       <footer className="bg-slate-900 border-t border-slate-800 text-slate-400 py-4 text-center text-xs">
         <div className="max-w-7xl mx-auto px-4">
-          <p>© 2026 EduTrack Platform - Academic Verification & Talent Matching</p>
+          <p>(c) 2026 EduTrack Platform - Academic Verification & Talent Matching</p>
         </div>
       </footer>
     </div>

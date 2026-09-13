@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Certificate } from '../../types';
-import { Upload, File, Check, X, Clock, Award, AlertCircle, ExternalLink } from 'lucide-react';
+import { Award, Check, Clock, ExternalLink, File, Upload, X } from 'lucide-react';
 import { api, resolveAssetUrl } from '../../services/api';
 
 interface CertificateUploadProps {
@@ -24,19 +24,20 @@ const CertificateUpload: React.FC<CertificateUploadProps> = ({ certificates: ini
 
   const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
-    if (file) {
-      if (file.size > 5 * 1024 * 1024) {
-        setUploadError('File size exceeds 5MB limit');
-        setSelectedFile(null);
-        return;
-      }
-      setUploadError('');
-      setSelectedFile(file);
+    if (!file) return;
+
+    if (file.size > 5 * 1024 * 1024) {
+      setUploadError('File size exceeds 5MB limit');
+      setSelectedFile(null);
+      return;
     }
+
+    setUploadError('');
+    setSelectedFile(file);
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSubmit = async (event: React.FormEvent) => {
+    event.preventDefault();
     setIsUploading(true);
     setUploadError('');
 
@@ -56,7 +57,7 @@ const CertificateUpload: React.FC<CertificateUploadProps> = ({ certificates: ini
         setFormData({ title: '', issuer: '', dateIssued: '', type: 'academic' });
         setSelectedFile(null);
         setShowUploadForm(false);
-        if (onCertificateAdded) onCertificateAdded();
+        onCertificateAdded?.();
       } else {
         setUploadError(res.error || 'Failed to upload certificate');
       }
@@ -70,151 +71,110 @@ const CertificateUpload: React.FC<CertificateUploadProps> = ({ certificates: ini
   const getStatusIcon = (status: Certificate['status']) => {
     switch (status) {
       case 'approved':
-        return <Check className="w-5 h-5 text-green-600" />;
+        return <Check className="h-4 w-4" />;
       case 'rejected':
-        return <X className="w-5 h-5 text-red-600" />;
+        return <X className="h-4 w-4" />;
       default:
-        return <Clock className="w-5 h-5 text-yellow-600" />;
+        return <Clock className="h-4 w-4" />;
     }
   };
 
   const getStatusColor = (status: Certificate['status']) => {
     switch (status) {
       case 'approved':
-        return 'bg-green-100 text-green-800 border-green-200';
+        return 'bg-green-50 text-green-700 border-green-200';
       case 'rejected':
-        return 'bg-red-100 text-red-800 border-red-200';
+        return 'bg-red-50 text-red-700 border-red-200';
       default:
-        return 'bg-yellow-100 text-yellow-800 border-yellow-200';
+        return 'bg-yellow-50 text-yellow-700 border-yellow-200';
     }
   };
 
-  const getTypeIcon = (type: Certificate['type']) => {
-    switch (type) {
-      case 'academic':
-        return '🎓';
-      case 'co-curricular':
-        return '🏆';
-      case 'extracurricular':
-        return '🌟';
-      default:
-        return '📄';
-    }
-  };
+  const getTypeLabel = (type: Certificate['type']) =>
+    type.replace('-', ' ').replace(/\b\w/g, letter => letter.toUpperCase());
 
   const stats = {
     total: certificates.length,
-    approved: certificates.filter(c => c.status === 'approved').length,
-    pending: certificates.filter(c => c.status === 'pending').length,
-    rejected: certificates.filter(c => c.status === 'rejected').length
+    approved: certificates.filter(certificate => certificate.status === 'approved').length,
+    pending: certificates.filter(certificate => certificate.status === 'pending').length,
+    rejected: certificates.filter(certificate => certificate.status === 'rejected').length
   };
 
   return (
-    <div className="p-6">
-      {/* Stats */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-        <div className="bg-blue-50 rounded-lg p-4 border border-blue-200">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-blue-600">Total</p>
-              <p className="text-2xl font-bold text-blue-900">{stats.total}</p>
-            </div>
-            <Award className="w-8 h-8 text-blue-600" />
-          </div>
+    <div className="space-y-8">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <h3 className="text-xl font-bold text-gray-900">Certificates</h3>
+          <p className="mt-1 text-sm text-gray-500">
+            Upload and manage your academic and extracurricular certificates
+          </p>
         </div>
-        <div className="bg-green-50 rounded-lg p-4 border border-green-200">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-green-600">Approved</p>
-              <p className="text-2xl font-bold text-green-900">{stats.approved}</p>
-            </div>
-            <Check className="w-8 h-8 text-green-600" />
-          </div>
-        </div>
-        <div className="bg-yellow-50 rounded-lg p-4 border border-yellow-200">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-yellow-600">Pending</p>
-              <p className="text-2xl font-bold text-yellow-900">{stats.pending}</p>
-            </div>
-            <Clock className="w-8 h-8 text-yellow-600" />
-          </div>
-        </div>
-        <div className="bg-red-50 rounded-lg p-4 border border-red-200">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-red-600">Rejected</p>
-              <p className="text-2xl font-bold text-red-900">{stats.rejected}</p>
-            </div>
-            <X className="w-8 h-8 text-red-600" />
-          </div>
-        </div>
-      </div>
-
-      {/* Upload Section */}
-      <div className="flex justify-between items-center mb-6">
-        <h3 className="text-xl font-bold text-gray-900">Certificates</h3>
         <button
           onClick={() => setShowUploadForm(true)}
-          className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium flex items-center space-x-2 transition-colors shadow-sm"
+          className="inline-flex items-center justify-center gap-2 rounded-lg bg-blue-600 px-4 py-2.5 font-medium text-white transition-colors hover:bg-blue-700"
         >
-          <Upload className="w-4 h-4" />
-          <span>Upload Certificate</span>
+          <Upload className="h-4 w-4" />
+          Upload Certificate
         </button>
       </div>
 
-      {/* Upload Form Modal */}
+      <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+        <CertStat label="Total" value={stats.total} icon={Award} color="blue" />
+        <CertStat label="Approved" value={stats.approved} icon={Check} color="green" />
+        <CertStat label="Pending" value={stats.pending} icon={Clock} color="yellow" />
+        <CertStat label="Rejected" value={stats.rejected} icon={X} color="red" />
+      </div>
+
       {showUploadForm && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-xl p-6 w-full max-w-md shadow-2xl border border-slate-200">
-            <div className="flex justify-between items-center mb-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm">
+          <div className="w-full max-w-md rounded-xl border border-slate-200 bg-white p-6 shadow-2xl">
+            <div className="mb-4 flex items-center justify-between">
               <h4 className="text-lg font-bold text-gray-900">Upload Certificate Document</h4>
-              <button onClick={() => setShowUploadForm(false)} className="text-gray-400 hover:text-gray-600 text-xl font-bold">x</button>
+              <button onClick={() => setShowUploadForm(false)} className="text-xl font-bold text-gray-400 hover:text-gray-600">x</button>
             </div>
 
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Title</label>
+                <label className="mb-1 block text-sm font-medium text-gray-700">Title</label>
                 <input
                   type="text"
                   required
                   value={formData.title}
-                  onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+                  onChange={event => setFormData({ ...formData, title: event.target.value })}
+                  className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-transparent focus:ring-2 focus:ring-blue-500"
                   placeholder="e.g. AWS Cloud Practitioner"
                 />
               </div>
-              
+
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Issuer</label>
+                <label className="mb-1 block text-sm font-medium text-gray-700">Issuer</label>
                 <input
                   type="text"
                   required
                   value={formData.issuer}
-                  onChange={(e) => setFormData({ ...formData, issuer: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+                  onChange={event => setFormData({ ...formData, issuer: event.target.value })}
+                  className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-transparent focus:ring-2 focus:ring-blue-500"
                   placeholder="e.g. Amazon Web Services"
                 />
               </div>
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Date Issued</label>
+                  <label className="mb-1 block text-sm font-medium text-gray-700">Date Issued</label>
                   <input
                     type="date"
                     required
                     value={formData.dateIssued}
-                    onChange={(e) => setFormData({ ...formData, dateIssued: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 text-sm"
+                    onChange={event => setFormData({ ...formData, dateIssued: event.target.value })}
+                    className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500"
                   />
                 </div>
-
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Type</label>
+                  <label className="mb-1 block text-sm font-medium text-gray-700">Type</label>
                   <select
                     value={formData.type}
-                    onChange={(e) => setFormData({ ...formData, type: e.target.value as Certificate['type'] })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 text-sm"
+                    onChange={event => setFormData({ ...formData, type: event.target.value as Certificate['type'] })}
+                    className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500"
                   >
                     <option value="academic">Academic</option>
                     <option value="co-curricular">Co-curricular</option>
@@ -224,46 +184,39 @@ const CertificateUpload: React.FC<CertificateUploadProps> = ({ certificates: ini
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Certificate File (PDF, PNG, JPG &lt; 5MB)</label>
-                <div className="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-lg hover:border-blue-400 transition-colors bg-slate-50">
-                  <div className="space-y-1 text-center">
+                <label className="mb-1 block text-sm font-medium text-gray-700">Certificate File (PDF, PNG, JPG under 5MB)</label>
+                <div className="mt-1 flex justify-center rounded-lg border-2 border-dashed border-gray-300 bg-slate-50 px-6 pb-6 pt-5 transition-colors hover:border-blue-400">
+                  <div className="space-y-2 text-center">
                     <File className="mx-auto h-10 w-10 text-gray-400" />
-                    <div className="flex text-sm text-gray-600 justify-center">
-                      <label className="relative cursor-pointer bg-white px-2 py-1 border border-gray-300 rounded-md font-medium text-blue-600 hover:text-blue-500 shadow-sm">
-                        <span>Select Certificate File</span>
-                        <input
-                          type="file"
-                          className="sr-only"
-                          accept=".pdf,.jpg,.jpeg,.png,.webp"
-                          onChange={handleFileSelect}
-                        />
-                      </label>
-                    </div>
+                    <label className="relative cursor-pointer rounded-md border border-gray-300 bg-white px-2 py-1 text-sm font-medium text-blue-600 shadow-sm hover:text-blue-500">
+                      <span>Select Certificate File</span>
+                      <input type="file" className="sr-only" accept=".pdf,.jpg,.jpeg,.png,.webp" onChange={handleFileSelect} />
+                    </label>
                     {selectedFile && (
-                      <p className="text-xs text-emerald-600 font-semibold mt-1">Selected: {selectedFile.name}</p>
+                      <p className="text-xs font-semibold text-emerald-600">Selected: {selectedFile.name}</p>
                     )}
                   </div>
                 </div>
               </div>
 
               {uploadError && (
-                <div className="p-2.5 rounded bg-rose-50 border border-rose-200 text-rose-600 text-xs text-center font-medium">
+                <div className="rounded border border-rose-200 bg-rose-50 p-2.5 text-center text-xs font-medium text-rose-600">
                   {uploadError}
                 </div>
               )}
 
-              <div className="flex space-x-3 pt-2">
+              <div className="flex gap-3 pt-2">
                 <button
                   type="submit"
                   disabled={isUploading}
-                  className="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded-md font-medium disabled:opacity-50 transition-colors shadow-sm"
+                  className="flex-1 rounded-md bg-blue-600 px-4 py-2 font-medium text-white shadow-sm transition-colors hover:bg-blue-700 disabled:opacity-50"
                 >
-                  {isUploading ? 'Uploading & Saving...' : 'Submit Certificate'}
+                  {isUploading ? 'Uploading and Saving...' : 'Submit Certificate'}
                 </button>
                 <button
                   type="button"
                   onClick={() => setShowUploadForm(false)}
-                  className="px-4 py-2 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50 transition-colors"
+                  className="rounded-md border border-gray-300 px-4 py-2 text-gray-700 transition-colors hover:bg-gray-50"
                 >
                   Cancel
                 </button>
@@ -273,52 +226,88 @@ const CertificateUpload: React.FC<CertificateUploadProps> = ({ certificates: ini
         </div>
       )}
 
-      {/* Certificates List */}
       <div className="space-y-4">
         {certificates.length === 0 ? (
-          <div className="text-center py-12 bg-gray-50 rounded-lg">
-            <AlertCircle className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-            <h4 className="text-lg font-medium text-gray-900 mb-2">No certificates uploaded</h4>
-            <p className="text-gray-600">Start by uploading your first certificate.</p>
+          <div className="rounded-xl border border-gray-200 bg-gray-50 py-14 text-center">
+            <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-blue-50">
+              <Award className="h-6 w-6 text-blue-600" />
+            </div>
+            <h4 className="mb-1 text-lg font-semibold text-gray-900">No certificates yet</h4>
+            <p className="mb-5 text-sm text-gray-500">Upload your first certificate to get started.</p>
+            <button
+              onClick={() => setShowUploadForm(true)}
+              className="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-blue-700"
+            >
+              <Upload className="h-4 w-4" />
+              Upload Certificate
+            </button>
           </div>
         ) : (
-          certificates.map((cert) => (
-            <div key={cert.id} className="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow bg-white">
-              <div className="flex items-start justify-between">
-                <div className="flex items-start space-x-3">
-                  <div className="text-2xl">{getTypeIcon(cert.type)}</div>
-                  <div className="flex-1">
+          certificates.map(cert => (
+            <div key={cert.id} className="rounded-xl border border-gray-200 bg-white p-5 transition-all duration-200 hover:border-blue-300 hover:shadow-sm">
+              <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+                <div className="flex items-start gap-4">
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-blue-50">
+                    <Award className="h-5 w-5 text-blue-600" />
+                  </div>
+                  <div className="min-w-0 flex-1">
                     <h5 className="font-semibold text-gray-900">{cert.title}</h5>
                     <p className="text-sm text-gray-600">{cert.issuer}</p>
-                    <p className="text-xs text-gray-500 mt-0.5">Issued: {new Date(cert.dateIssued).toLocaleDateString()}</p>
-                    <div className="mt-2 flex items-center space-x-3">
-                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800 border border-gray-200">
-                        {cert.type.replace('-', ' ').replace(/\b\w/g, l => l.toUpperCase())}
+                    <p className="mt-0.5 text-xs text-gray-500">Issued: {new Date(cert.dateIssued).toLocaleDateString()}</p>
+                    <div className="mt-3 flex flex-wrap items-center gap-3">
+                      <span className="inline-flex items-center rounded-full border border-gray-200 bg-gray-100 px-2.5 py-0.5 text-xs font-medium text-gray-800">
+                        {getTypeLabel(cert.type)}
                       </span>
                       {cert.fileUrl && (
                         <a
                           href={resolveAssetUrl(cert.fileUrl)}
                           target="_blank"
                           rel="noreferrer"
-                          className="inline-flex items-center space-x-1 text-xs text-blue-600 hover:underline font-medium"
+                          className="inline-flex items-center gap-1 text-xs font-medium text-blue-600 hover:underline"
                         >
-                          <ExternalLink className="w-3 h-3" />
-                          <span>View Attachment</span>
+                          <ExternalLink className="h-3 w-3" />
+                          View Attachment
                         </a>
                       )}
                     </div>
                   </div>
                 </div>
-                <div className="flex items-center space-x-2">
+                <span className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs font-semibold ${getStatusColor(cert.status)}`}>
                   {getStatusIcon(cert.status)}
-                  <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold border ${getStatusColor(cert.status)}`}>
-                    {cert.status.charAt(0).toUpperCase() + cert.status.slice(1)}
-                  </span>
-                </div>
+                  {cert.status.charAt(0).toUpperCase() + cert.status.slice(1)}
+                </span>
               </div>
             </div>
           ))
         )}
+      </div>
+    </div>
+  );
+};
+
+const CertStat: React.FC<{
+  label: string;
+  value: number;
+  icon: React.ComponentType<{ className?: string }>;
+  color: 'blue' | 'green' | 'yellow' | 'red';
+}> = ({ label, value, icon: Icon, color }) => {
+  const colorClasses = {
+    blue: 'bg-blue-50 text-blue-600 hover:border-blue-300',
+    green: 'bg-green-50 text-green-600 hover:border-green-300',
+    yellow: 'bg-yellow-50 text-yellow-600 hover:border-yellow-300',
+    red: 'bg-red-50 text-red-600 hover:border-red-300'
+  };
+
+  return (
+    <div className={`rounded-lg border border-gray-200 bg-white p-6 transition-all duration-200 hover:shadow-sm ${colorClasses[color]}`}>
+      <div className="flex items-center gap-4">
+        <div className={`flex h-10 w-10 items-center justify-center rounded-lg ${colorClasses[color].split(' ')[0]}`}>
+          <Icon className={`h-5 w-5 ${colorClasses[color].split(' ')[1]}`} />
+        </div>
+        <div>
+          <p className="text-sm text-gray-500">{label}</p>
+          <p className="text-2xl font-bold text-gray-900">{value}</p>
+        </div>
       </div>
     </div>
   );
