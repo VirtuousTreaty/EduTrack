@@ -188,16 +188,17 @@ test('presentation demo accounts can access their role dashboards', async () => 
     return response.body.token;
   }
 
-  const studentToken = await loginDemo('aarav@student.edu', 'student');
+  const studentToken = await loginDemo('alice@student.edu', 'student');
   const studentProfile = await request(app)
     .get('/api/students/profile')
     .set(auth(studentToken))
     .expect(200);
 
-  assert.equal(studentProfile.body.student.email, 'aarav@student.edu');
+  assert.equal(studentProfile.body.student.email, 'alice@student.edu');
+  assert.equal(studentProfile.body.student.name, 'Anshika Middha');
   assert.ok(studentProfile.body.student.academicRecords.length >= 1);
 
-  const universityToken = await loginDemo('registrar@kiet.edu', 'university');
+  const universityToken = await loginDemo('admin@techuniversity.edu', 'university');
   const universityStudents = await request(app)
     .get('/api/university/students')
     .set(auth(universityToken))
@@ -205,7 +206,7 @@ test('presentation demo accounts can access their role dashboards', async () => 
 
   assert.ok(universityStudents.body.students.length >= 4);
 
-  const companyToken = await loginDemo('talent@novacore.com', 'company');
+  const companyToken = await loginDemo('recruiter@techcorp.com', 'company');
   const candidates = await request(app)
     .get('/api/company/students')
     .set(auth(companyToken))

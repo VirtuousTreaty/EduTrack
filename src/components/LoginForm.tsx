@@ -14,9 +14,9 @@ type Role = 'student' | 'university' | 'company';
 type Mode = 'login' | 'signup';
 
 const demoCredentials: Record<Role, { email: string; password: string }> = {
-  student: { email: 'aarav@student.edu', password: 'Password@123' },
-  university: { email: 'registrar@kiet.edu', password: 'Password@123' },
-  company: { email: 'talent@novacore.com', password: 'Password@123' }
+  student: { email: 'alice@student.edu', password: 'Password@123' },
+  university: { email: 'admin@techuniversity.edu', password: 'Password@123' },
+  company: { email: 'recruiter@techcorp.com', password: 'Password@123' }
 };
 
 const LoginForm: React.FC = () => {

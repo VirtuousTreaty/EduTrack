@@ -21,5 +21,6 @@ export const config = {
   jwtSecret: getJwtSecret(),
   nodeEnv: process.env.NODE_ENV || 'development',
   port: Number(process.env.PORT || 5000),
+  demoSeedVersion: process.env.DEMO_SEED_VERSION || 'friends-v1',
   seedMode: process.env.SEED_MODE || 'default'
 };

@@ -15,6 +15,8 @@ services:
         value: true
       - key: SEED_MODE
         value: demo
+      - key: DEMO_SEED_VERSION
+        value: friends-v1
       - key: CLIENT_URL
         sync: false
       - key: JWT_SECRET
