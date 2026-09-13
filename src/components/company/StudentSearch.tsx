@@ -71,8 +71,8 @@ const StudentSearch: React.FC = () => {
   return (
     <div className="p-6">
       <div className="mb-6">
-        <h3 className="text-xl font-black text-slate-900 mb-1">Corporate Talent Discovery</h3>
-        <p className="text-slate-500 text-sm">Search and filter verified student candidates by technical stack, GPA & accomplishments</p>
+        <h3 className="text-xl font-bold text-slate-900 mb-2">Find Talent</h3>
+        <p className="text-slate-600">Search and filter verified student candidates by technical stack, GPA and accomplishments</p>
       </div>
 
       {/* Search and Filters */}
@@ -87,7 +87,7 @@ const StudentSearch: React.FC = () => {
                 placeholder="Name, course..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-9 pr-3 py-2 w-full border border-slate-300 rounded-lg text-xs focus:ring-2 focus:ring-purple-500"
+                className="pl-9 pr-3 py-2 w-full border border-slate-300 rounded-lg text-xs focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               />
             </div>
           </div>
@@ -99,7 +99,7 @@ const StudentSearch: React.FC = () => {
               placeholder="e.g. React, Python"
               value={skillFilter}
               onChange={(e) => setSkillFilter(e.target.value)}
-              className="px-3 py-2 w-full border border-slate-300 rounded-lg text-xs focus:ring-2 focus:ring-purple-500"
+              className="px-3 py-2 w-full border border-slate-300 rounded-lg text-xs focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
             />
           </div>
 
@@ -108,7 +108,7 @@ const StudentSearch: React.FC = () => {
             <select
               value={courseFilter}
               onChange={(e) => setCourseFilter(e.target.value)}
-              className="px-3 py-2 w-full border border-slate-300 rounded-lg text-xs focus:ring-2 focus:ring-purple-500"
+              className="px-3 py-2 w-full border border-slate-300 rounded-lg text-xs focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
             >
               <option value="">All Degree Courses</option>
               <option value="Computer Science and Engineering">Computer Science</option>
@@ -126,7 +126,7 @@ const StudentSearch: React.FC = () => {
               placeholder="e.g. 3.5"
               value={minGPA}
               onChange={(e) => setMinGPA(e.target.value)}
-              className="px-3 py-2 w-full border border-slate-300 rounded-lg text-xs focus:ring-2 focus:ring-purple-500"
+              className="px-3 py-2 w-full border border-slate-300 rounded-lg text-xs focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
             />
           </div>
 
@@ -135,7 +135,7 @@ const StudentSearch: React.FC = () => {
             <select
               value={yearFilter}
               onChange={(e) => setYearFilter(e.target.value)}
-              className="px-3 py-2 w-full border border-slate-300 rounded-lg text-xs focus:ring-2 focus:ring-purple-500"
+              className="px-3 py-2 w-full border border-slate-300 rounded-lg text-xs focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
             >
               <option value="">All Years</option>
               <option value="1">1st Year</option>
@@ -154,7 +154,7 @@ const StudentSearch: React.FC = () => {
       {/* Results */}
       {loading ? (
         <div className="py-16 flex justify-center items-center">
-          <Loader2 className="w-8 h-8 text-purple-600 animate-spin" />
+          <Loader2 className="w-8 h-8 text-blue-600 animate-spin" />
         </div>
       ) : students.length === 0 ? (
         <div className="text-center py-12 bg-slate-50 rounded-xl border border-slate-200">
@@ -165,12 +165,12 @@ const StudentSearch: React.FC = () => {
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {students.map((student) => (
-            <div key={student.id} className="bg-white border border-slate-200 rounded-xl p-5 hover:shadow-lg transition-all border-t-4 border-t-purple-600">
+            <div key={student.id} className="bg-white border border-slate-200 rounded-xl p-6 hover:border-blue-300 hover:shadow-sm transition-all duration-300">
               <div className="flex items-start space-x-4 mb-4">
                 <img
                   src={student.avatar || 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&q=80&w=256'}
                   alt={student.name}
-                  className="w-14 h-14 rounded-full object-cover border-2 border-purple-500"
+                  className="w-16 h-16 rounded-full object-cover border-2 border-slate-200"
                 />
                 <div className="flex-1 min-w-0">
                   <h4 className="font-bold text-slate-900 text-base truncate">{student.name}</h4>
@@ -190,13 +190,13 @@ const StudentSearch: React.FC = () => {
                 </div>
                 <div className="text-center border-x border-slate-200">
                   <p className="text-[10px] uppercase font-bold text-slate-500">Certs</p>
-                  <span className="font-extrabold text-emerald-700 text-sm">
+                  <span className="font-extrabold text-blue-700 text-sm">
                     {student.certificates.filter(c => c.status === 'approved').length}
                   </span>
                 </div>
                 <div className="text-center">
                   <p className="text-[10px] uppercase font-bold text-slate-500">Year</p>
-                  <span className="font-extrabold text-purple-700 text-sm">Y{student.year}</span>
+                  <span className="font-extrabold text-slate-700 text-sm">Y{student.year}</span>
                 </div>
               </div>
 
@@ -204,7 +204,7 @@ const StudentSearch: React.FC = () => {
               <div className="mb-4">
                 <div className="flex flex-wrap gap-1">
                   {student.skills.slice(0, 4).map((skill, index) => (
-                    <span key={index} className="px-2 py-0.5 rounded text-[11px] font-bold bg-purple-50 text-purple-700 border border-purple-200">
+                    <span key={index} className="px-2 py-1 rounded-full text-xs font-medium bg-blue-50 text-blue-700 border border-blue-100">
                       {skill}
                     </span>
                   ))}
@@ -220,14 +220,14 @@ const StudentSearch: React.FC = () => {
               <div className="flex space-x-2">
                 <button
                   onClick={() => setSelectedStudent(student)}
-                  className="flex-1 bg-purple-600 hover:bg-purple-700 text-white py-2 rounded-lg text-xs font-bold flex items-center justify-center space-x-1 transition-colors"
+                className="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-lg text-sm font-medium flex items-center justify-center space-x-2 transition-colors"
                 >
                   <Eye className="w-4 h-4" />
                   <span>View Candidate</span>
                 </button>
                 <button
                   onClick={() => downloadStudentResume(student)}
-                  className="px-3 py-2 border border-purple-200 text-purple-700 rounded-lg hover:bg-purple-50 transition-colors"
+                  className="px-3 py-2 border border-slate-300 text-slate-700 rounded-lg hover:bg-slate-50 transition-colors"
                   title="Download PDF Resume"
                 >
                   <Download className="w-4 h-4" />
@@ -252,13 +252,13 @@ const StudentSearch: React.FC = () => {
                 <img
                   src={selectedStudent.avatar || 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&q=80&w=256'}
                   alt={selectedStudent.name}
-                  className="w-16 h-16 rounded-full object-cover border-2 border-purple-500"
+                  className="w-16 h-16 rounded-full object-cover border-2 border-slate-200"
                 />
                 <div>
                   <h4 className="text-lg font-bold text-slate-900">{selectedStudent.name}</h4>
                   <p className="text-xs font-semibold text-slate-600">{selectedStudent.course} - Year {selectedStudent.year}</p>
                   <p className="text-xs text-slate-500">{selectedStudent.university} ({selectedStudent.email})</p>
-                  <span className="inline-block mt-2 px-3 py-0.5 bg-purple-100 text-purple-800 text-xs font-bold rounded-full">
+                  <span className="inline-block mt-2 px-3 py-0.5 bg-blue-50 text-blue-700 border border-blue-100 text-xs font-medium rounded-full">
                     GPA: {selectedStudent.gpa} / 4.0
                   </span>
                 </div>
@@ -268,7 +268,7 @@ const StudentSearch: React.FC = () => {
                 <h5 className="font-bold text-slate-900 text-sm mb-2">Technical Skills & Competencies</h5>
                 <div className="flex flex-wrap gap-1.5">
                   {selectedStudent.skills.map((skill, index) => (
-                    <span key={index} className="px-2.5 py-1 rounded bg-purple-50 text-purple-700 border border-purple-200 text-xs font-semibold">
+                    <span key={index} className="px-2.5 py-1 rounded-full bg-blue-50 text-blue-700 border border-blue-100 text-xs font-medium">
                       {skill}
                     </span>
                   ))}
@@ -282,12 +282,12 @@ const StudentSearch: React.FC = () => {
                     <p className="text-xs text-slate-500">No verified certificates uploaded yet.</p>
                   ) : (
                     selectedStudent.certificates.filter(c => c.status === 'approved').map(c => (
-                      <div key={c.id} className="p-3 bg-emerald-50 border border-emerald-200 rounded-lg text-xs flex justify-between items-center">
+                      <div key={c.id} className="p-3 bg-blue-50 border border-blue-200 rounded-lg text-xs flex justify-between items-center">
                         <div>
-                          <p className="font-bold text-emerald-900">{c.title}</p>
-                          <p className="text-emerald-700">{c.issuer} - Issued {new Date(c.dateIssued).toLocaleDateString()}</p>
+                          <p className="font-bold text-blue-900">{c.title}</p>
+                          <p className="text-blue-700">{c.issuer} - Issued {new Date(c.dateIssued).toLocaleDateString()}</p>
                         </div>
-                        <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-300">
+                        <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-blue-50 text-blue-700 border border-blue-200">
                           VERIFIED
                         </span>
                       </div>
@@ -299,7 +299,7 @@ const StudentSearch: React.FC = () => {
               <div className="pt-2">
                 <button
                   onClick={() => downloadStudentResume(selectedStudent)}
-                  className="w-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-2.5 rounded-lg text-xs flex items-center justify-center space-x-2 shadow-sm"
+                  className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-2.5 rounded-lg text-sm flex items-center justify-center space-x-2"
                 >
                   <Download className="w-4 h-4" />
                   <span>Download Complete Resume PDF</span>

@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { Student } from '../../types';
-import { Search, Eye, GraduationCap, Loader2 } from 'lucide-react';
+import { Search, Eye, GraduationCap, Loader2, Award, Activity } from 'lucide-react';
 import { api } from '../../services/api';
 
 const StudentList: React.FC = () => {
@@ -39,8 +39,12 @@ const StudentList: React.FC = () => {
   return (
     <div className="p-6">
       {/* Filters */}
-      <div className="flex flex-col sm:flex-row gap-4 mb-6">
+      <div className="bg-white border border-slate-200 rounded-xl p-5 mb-6 shadow-sm">
+        <div className="flex flex-col sm:flex-row gap-4">
         <div className="flex-1">
+          <label className="block text-sm font-medium text-slate-700 mb-2">
+            Search Students
+          </label>
           <div className="relative">
             <Search className="absolute left-3 top-3 h-4 w-4 text-slate-400" />
             <input
@@ -48,26 +52,35 @@ const StudentList: React.FC = () => {
               placeholder="Search students by name, email or university..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10 pr-4 py-2.5 w-full border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-emerald-500 focus:outline-none"
+              className="pl-10 pr-4 py-2.5 w-full border border-slate-200 rounded-lg text-sm text-slate-900 placeholder:text-slate-400 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:outline-none"
             />
           </div>
         </div>
         
-        <div className="flex gap-2">
+        <div className="flex flex-col sm:flex-row gap-2 sm:items-end">
+          <div>
+          <label className="block text-sm font-medium text-slate-700 mb-2">
+            Course
+          </label>
           <select
             value={selectedCourse}
             onChange={(e) => setSelectedCourse(e.target.value)}
-            className="px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-emerald-500"
+            className="px-3 py-2 border border-slate-200 rounded-lg text-sm text-slate-700 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
           >
             <option value="">All Degree Courses</option>
             <option value="Computer Science and Engineering">Computer Science and Engineering</option>
             <option value="Electrical Engineering">Electrical Engineering</option>
           </select>
+          </div>
           
+          <div>
+          <label className="block text-sm font-medium text-slate-700 mb-2">
+            Year
+          </label>
           <select
             value={selectedYear}
             onChange={(e) => setSelectedYear(e.target.value)}
-            className="px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-emerald-500"
+            className="px-3 py-2 border border-slate-200 rounded-lg text-sm text-slate-700 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
           >
             <option value="">All Academic Years</option>
             <option value="1">Year 1</option>
@@ -75,6 +88,8 @@ const StudentList: React.FC = () => {
             <option value="3">Year 3</option>
             <option value="4">Year 4</option>
           </select>
+          </div>
+        </div>
         </div>
       </div>
 
@@ -88,7 +103,7 @@ const StudentList: React.FC = () => {
       {/* Loading state or Grid */}
       {loading ? (
         <div className="py-16 flex justify-center items-center">
-          <Loader2 className="w-8 h-8 text-emerald-600 animate-spin" />
+          <Loader2 className="w-8 h-8 text-blue-600 animate-spin" />
         </div>
       ) : students.length === 0 ? (
         <div className="text-center py-12 bg-slate-50 rounded-xl border border-slate-200">
@@ -99,35 +114,44 @@ const StudentList: React.FC = () => {
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {students.map((student) => (
-            <div key={student.id} className="bg-white border border-slate-200 rounded-xl p-5 hover:shadow-md transition-all">
+            <div key={student.id} className="bg-white border border-slate-200 rounded-xl p-6 hover:border-blue-300 hover:shadow-sm transition-all duration-300">
               <div className="flex items-start space-x-4 mb-4">
                 <img
                   src={student.avatar || 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&q=80&w=256'}
                   alt={student.name}
-                  className="w-14 h-14 rounded-full object-cover border-2 border-emerald-500"
+                  className="w-16 h-16 rounded-full object-cover border-2 border-slate-200"
                 />
                 <div className="flex-1">
-                  <h3 className="font-bold text-slate-900 text-base">{student.name}</h3>
-                  <p className="text-xs font-medium text-slate-600">{student.course}</p>
-                  <p className="text-xs text-slate-500 mt-0.5">Year {student.year} - {student.university}</p>
+                  <h3 className="font-semibold text-slate-900 text-base">{student.name}</h3>
+                  <p className="text-sm font-medium text-blue-600">{student.course}</p>
+                  <p className="text-sm text-slate-500 mt-0.5">Year {student.year} - {student.university}</p>
                 </div>
               </div>
 
               {/* Stats */}
-              <div className="grid grid-cols-3 gap-2 mb-4 bg-slate-50 p-2.5 rounded-lg border border-slate-100">
+              <div className="grid grid-cols-3 gap-3 mb-4">
                 <div className="text-center">
-                  <p className="text-[10px] uppercase font-bold text-slate-500">GPA</p>
-                  <p className="font-extrabold text-slate-900 text-sm">{student.gpa}</p>
+                  <div className="flex items-center justify-center w-8 h-8 bg-blue-50 border border-blue-100 rounded-full mx-auto mb-1">
+                    <GraduationCap className="w-4 h-4 text-blue-600" />
+                  </div>
+                  <p className="text-xs text-slate-500">GPA</p>
+                  <p className="font-semibold text-slate-900 text-sm">{student.gpa}</p>
                 </div>
-                <div className="text-center border-x border-slate-200">
-                  <p className="text-[10px] uppercase font-bold text-slate-500">Certs</p>
-                  <p className="font-extrabold text-emerald-700 text-sm">
+                <div className="text-center">
+                  <div className="flex items-center justify-center w-8 h-8 bg-blue-50 border border-blue-100 rounded-full mx-auto mb-1">
+                    <Award className="w-4 h-4 text-blue-600" />
+                  </div>
+                  <p className="text-xs text-slate-500">Certificates</p>
+                  <p className="font-semibold text-slate-900 text-sm">
                     {student.certificates.filter(c => c.status === 'approved').length}
                   </p>
                 </div>
                 <div className="text-center">
-                  <p className="text-[10px] uppercase font-bold text-slate-500">Activities</p>
-                  <p className="font-extrabold text-purple-700 text-sm">{student.activities.length}</p>
+                  <div className="flex items-center justify-center w-8 h-8 bg-slate-100 border border-slate-200 rounded-full mx-auto mb-1">
+                    <Activity className="w-4 h-4 text-slate-600" />
+                  </div>
+                  <p className="text-xs text-slate-500">Activities</p>
+                  <p className="font-semibold text-slate-900 text-sm">{student.activities.length}</p>
                 </div>
               </div>
 
@@ -135,12 +159,12 @@ const StudentList: React.FC = () => {
               <div className="mb-4">
                 <div className="flex flex-wrap gap-1">
                   {student.skills.slice(0, 3).map((skill, index) => (
-                    <span key={index} className="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-semibold bg-emerald-50 text-emerald-800 border border-emerald-200">
+                    <span key={index} className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-slate-100 text-slate-700">
                       {skill}
                     </span>
                   ))}
                   {student.skills.length > 3 && (
-                    <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold bg-slate-100 text-slate-600">
+                    <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-slate-100 text-slate-500">
                       +{student.skills.length - 3}
                     </span>
                   )}
@@ -150,7 +174,7 @@ const StudentList: React.FC = () => {
               {/* Actions */}
               <button
                 onClick={() => setSelectedStudent(student)}
-                className="w-full bg-emerald-600 hover:bg-emerald-700 text-white py-2 rounded-lg text-xs font-bold flex items-center justify-center space-x-1.5 transition-colors shadow-sm"
+                className="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-lg text-sm font-medium flex items-center justify-center space-x-2 transition-colors"
               >
                 <Eye className="w-4 h-4" />
                 <span>View Full Record</span>
@@ -174,7 +198,7 @@ const StudentList: React.FC = () => {
                 <img
                   src={selectedStudent.avatar || 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&q=80&w=256'}
                   alt={selectedStudent.name}
-                  className="w-16 h-16 rounded-full object-cover border-2 border-emerald-500"
+                  className="w-16 h-16 rounded-full object-cover border-2 border-slate-200"
                 />
                 <div>
                   <h4 className="text-lg font-bold text-slate-900">{selectedStudent.name}</h4>
@@ -190,7 +214,7 @@ const StudentList: React.FC = () => {
                 <h5 className="font-bold text-slate-900 text-sm mb-2">Verified Skill Set</h5>
                 <div className="flex flex-wrap gap-1.5">
                   {selectedStudent.skills.map((skill, index) => (
-                    <span key={index} className="px-2.5 py-1 rounded bg-indigo-50 text-indigo-700 border border-indigo-200 text-xs font-semibold">
+                    <span key={index} className="px-2.5 py-1 rounded-full bg-blue-50 text-blue-700 border border-blue-100 text-xs font-medium">
                       {skill}
                     </span>
                   ))}
@@ -228,7 +252,7 @@ const StudentList: React.FC = () => {
                         <p className="text-slate-500">{cert.issuer} - Issued {new Date(cert.dateIssued).toLocaleDateString()}</p>
                       </div>
                       <span className={`px-2 py-0.5 rounded text-[11px] font-bold ${
-                        cert.status === 'approved' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'
+                        cert.status === 'approved' ? 'bg-blue-50 text-blue-700 border border-blue-100' : 'bg-slate-100 text-slate-700 border border-slate-200'
                       }`}>
                         {cert.status.toUpperCase()}
                       </span>

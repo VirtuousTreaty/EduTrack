@@ -66,10 +66,12 @@ const RecommendationEngine: React.FC = () => {
     <div className="p-6">
       <div className="mb-8">
         <div className="flex items-center space-x-3 mb-1">
-          <Bot className="w-7 h-7 text-purple-600" />
-          <h3 className="text-xl font-black text-slate-900">AI Candidate Recommendation Engine</h3>
+          <div className="w-10 h-10 rounded-lg bg-blue-50 flex items-center justify-center">
+            <Bot className="w-6 h-6 text-blue-600" />
+          </div>
+          <h3 className="text-xl font-bold text-slate-900">AI-Powered Recommendations</h3>
         </div>
-        <p className="text-slate-500 text-sm">Automated match scoring algorithm assessing verified skills, GPA & academic history</p>
+        <p className="text-slate-600">Automated match scoring algorithm assessing verified skills, GPA and academic history</p>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -77,8 +79,8 @@ const RecommendationEngine: React.FC = () => {
         <div className="lg:col-span-1">
           <div className="bg-white border border-slate-200 rounded-xl p-5 space-y-4 shadow-sm">
             <h4 className="text-sm font-bold text-slate-900 flex items-center gap-1.5 uppercase tracking-wider">
-              <Target className="w-4 h-4 text-purple-600" />
-              Target Role Criteria
+              <Target className="w-4 h-4 text-blue-600" />
+              Job Requirements
             </h4>
 
             <div>
@@ -86,7 +88,7 @@ const RecommendationEngine: React.FC = () => {
               <select
                 value={selectedRole}
                 onChange={(e) => setSelectedRole(e.target.value)}
-                className="w-full px-3 py-2 border border-slate-300 rounded-lg text-xs focus:ring-2 focus:ring-purple-500"
+                className="w-full px-3 py-2 border border-slate-300 rounded-lg text-xs focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               >
                 {jobRoles.map(r => (
                   <option key={r} value={r}>{r}</option>
@@ -103,7 +105,7 @@ const RecommendationEngine: React.FC = () => {
                       type="checkbox"
                       checked={requiredSkills.includes(skill)}
                       onChange={() => toggleSkill(skill)}
-                      className="rounded text-purple-600 focus:ring-purple-500"
+                      className="rounded text-blue-600 focus:ring-blue-500"
                     />
                     <span className="font-medium">{skill}</span>
                   </label>
@@ -120,14 +122,14 @@ const RecommendationEngine: React.FC = () => {
                 max="4"
                 value={minGPA}
                 onChange={(e) => setMinGPA(e.target.value)}
-                className="w-full px-3 py-2 border border-slate-300 rounded-lg text-xs focus:ring-2 focus:ring-purple-500"
+                className="w-full px-3 py-2 border border-slate-300 rounded-lg text-xs focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               />
             </div>
 
             <button
               onClick={generateRecommendations}
               disabled={isGenerating}
-              className="w-full bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white font-bold py-2.5 rounded-lg text-xs flex items-center justify-center space-x-2 transition-all shadow-md disabled:opacity-50"
+              className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-2.5 rounded-lg text-sm flex items-center justify-center space-x-2 transition-colors disabled:opacity-50"
             >
               {isGenerating ? (
                 <>
@@ -148,12 +150,14 @@ const RecommendationEngine: React.FC = () => {
         <div className="lg:col-span-2">
           {recommendations.length === 0 ? (
             <div className="bg-white border border-slate-200 rounded-xl p-12 text-center shadow-sm">
-              <Bot className="w-16 h-16 text-purple-400 mx-auto mb-3" />
-              <h4 className="text-lg font-bold text-slate-800 mb-1">AI Recommendation Engine Ready</h4>
+              <div className="w-16 h-16 rounded-xl bg-blue-50 flex items-center justify-center mx-auto mb-4">
+                <Bot className="w-8 h-8 text-blue-600" />
+              </div>
+              <h4 className="text-lg font-medium text-slate-900 mb-2">AI Recommendations Ready</h4>
               <p className="text-slate-500 text-sm mb-4">Click "Run Recommendation Engine" to calculate candidate match scores across the talent pool.</p>
               <button
                 onClick={generateRecommendations}
-                className="px-4 py-2 bg-purple-600 text-white rounded-lg font-bold text-xs hover:bg-purple-700"
+                className="px-4 py-2 bg-blue-600 text-white rounded-lg font-medium text-sm hover:bg-blue-700"
               >
                 Run Default Scoring
               </button>
@@ -175,9 +179,9 @@ const RecommendationEngine: React.FC = () => {
                         <img
                           src={s.avatar || 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&q=80&w=256'}
                           alt={s.name}
-                          className="w-14 h-14 rounded-full object-cover border-2 border-purple-500"
+                          className="w-16 h-16 rounded-full object-cover border-2 border-slate-200"
                         />
-                        <span className="absolute -top-2 -right-2 w-6 h-6 bg-purple-600 text-white rounded-full flex items-center justify-center text-xs font-bold shadow">
+                        <span className="absolute -top-2 -right-2 w-6 h-6 bg-blue-600 text-white rounded-full flex items-center justify-center text-xs font-bold shadow">
                           #{index + 1}
                         </span>
                       </div>
@@ -190,18 +194,18 @@ const RecommendationEngine: React.FC = () => {
                             <p className="text-xs text-slate-500">{s.university}</p>
                           </div>
                           <div className="text-right">
-                            <span className="inline-block bg-purple-100 text-purple-800 font-extrabold text-sm px-3 py-1 rounded-full border border-purple-200">
+                            <span className="inline-block bg-blue-50 text-blue-700 font-bold text-sm px-3 py-1 rounded-full border border-blue-200">
                               {item.matchPercentage}% Match
                             </span>
                           </div>
                         </div>
 
                         {/* Match Reasons */}
-                        <div className="mt-3 bg-purple-50/60 border border-purple-100 p-2.5 rounded-lg space-y-1">
-                          <p className="text-[11px] font-bold text-purple-900 uppercase">Match Rationale:</p>
+                        <div className="mt-3 bg-blue-50/60 border border-blue-100 p-2.5 rounded-lg space-y-1">
+                          <p className="text-[11px] font-bold text-blue-900 uppercase">Match Rationale:</p>
                           {item.reasons.map((r: string, idx: number) => (
-                            <p key={idx} className="text-xs text-purple-800 flex items-center gap-1.5">
-                              <span className="w-1.5 h-1.5 bg-purple-500 rounded-full"></span>
+                            <p key={idx} className="text-xs text-blue-800 flex items-center gap-1.5">
+                              <span className="w-1.5 h-1.5 bg-blue-500 rounded-full"></span>
                               <span>{r}</span>
                             </p>
                           ))}
@@ -211,7 +215,7 @@ const RecommendationEngine: React.FC = () => {
                         <div className="mt-3 flex space-x-2">
                           <button
                             onClick={() => downloadStudentResume(s)}
-                            className="px-3 py-1.5 bg-purple-600 hover:bg-purple-700 text-white rounded-lg text-xs font-bold flex items-center space-x-1 shadow-sm"
+                            className="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-bold flex items-center space-x-1 shadow-sm"
                           >
                             <Download className="w-3.5 h-3.5" />
                             <span>Resume PDF</span>
