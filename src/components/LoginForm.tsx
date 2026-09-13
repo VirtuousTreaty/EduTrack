@@ -64,6 +64,14 @@ const LoginForm: React.FC = () => {
     setError('');
   };
 
+  const useAnshikaDemo = () => {
+    setMode('login');
+    setSelectedRole('student');
+    setEmail(demoCredentials.student.email);
+    setPassword(demoCredentials.student.password);
+    setError('');
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
@@ -317,6 +325,17 @@ const LoginForm: React.FC = () => {
                 <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-center text-sm font-medium text-red-700">
                   {error}
                 </div>
+              )}
+
+              {mode === 'login' && (
+                <button
+                  type="button"
+                  onClick={useAnshikaDemo}
+                  className="flex w-full items-center justify-center gap-2 rounded-lg border border-slate-300 bg-white px-4 py-3 text-sm font-semibold text-slate-800 transition-colors hover:border-slate-500 hover:bg-slate-50"
+                >
+                  <GraduationCap className="h-4 w-4" />
+                  <span>Use Anshika Demo</span>
+                </button>
               )}
 
               <button
