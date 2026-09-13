@@ -1,11 +1,27 @@
 import React, { useState } from 'react';
-import { useAuth } from '../hooks/useAuth';
-import { GraduationCap, Building2, Briefcase, Loader2, UserPlus, LogIn, Sparkles } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import {
+  Building2,
+  Briefcase,
+  GraduationCap,
+  Loader2,
+  LogIn,
+  UserPlus
+} from 'lucide-react';
+import { useAuth } from '../hooks/useAuth';
+
+type Role = 'student' | 'university' | 'company';
+type Mode = 'login' | 'signup';
+
+const demoCredentials: Record<Role, { email: string; password: string }> = {
+  student: { email: 'aarav@student.edu', password: 'Password@123' },
+  university: { email: 'registrar@kiet.edu', password: 'Password@123' },
+  company: { email: 'talent@novacore.com', password: 'Password@123' }
+};
 
 const LoginForm: React.FC = () => {
-  const [mode, setMode] = useState<'login' | 'signup'>('login');
-  const [selectedRole, setSelectedRole] = useState<'student' | 'university' | 'company'>('student');
+  const [mode, setMode] = useState<Mode>('login');
+  const [selectedRole, setSelectedRole] = useState<Role>('student');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [name, setName] = useState('');
@@ -14,7 +30,6 @@ const LoginForm: React.FC = () => {
   const [year, setYear] = useState('1');
   const [industry, setIndustry] = useState('');
   const [size, setSize] = useState('');
-
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
 
@@ -25,19 +40,36 @@ const LoginForm: React.FC = () => {
     {
       id: 'student' as const,
       name: 'Student',
-      icon: GraduationCap
+      icon: GraduationCap,
+      description: 'Academic record and portfolio'
     },
     {
       id: 'university' as const,
       name: 'University',
-      icon: Building2
+      icon: Building2,
+      description: 'Student records and certificate review'
     },
     {
       id: 'company' as const,
       name: 'Company',
-      icon: Briefcase
+      icon: Briefcase,
+      description: 'Verified talent discovery'
     }
   ];
+
+  const currentDemo = demoCredentials[selectedRole];
+
+  const fillDemoCredentials = () => {
+    setMode('login');
+    setEmail(currentDemo.email);
+    setPassword(currentDemo.password);
+    setError('');
+  };
+
+  const handleRoleChange = (role: Role) => {
+    setSelectedRole(role);
+    setError('');
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -78,200 +110,258 @@ const LoginForm: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-slate-950 flex items-center justify-center p-4 relative overflow-hidden">
-      <div className="absolute -top-40 -left-40 w-96 h-96 bg-indigo-600/30 rounded-full blur-3xl pointer-events-none"></div>
-      <div className="absolute -bottom-40 -right-40 w-96 h-96 bg-purple-600/30 rounded-full blur-3xl pointer-events-none"></div>
+    <div
+      className="relative min-h-screen overflow-hidden bg-black bg-cover bg-center bg-no-repeat px-4 py-6 sm:px-8 lg:px-16"
+      style={{
+        backgroundImage:
+          "url('https://i.pinimg.com/originals/1a/71/58/1a7158689e5ce37e5d78d97c332a003f.gif')"
+      }}
+    >
+      <div className="absolute inset-0 bg-black/25" />
 
-      <div className="max-w-xl w-full space-y-6 bg-slate-900/80 backdrop-blur-xl rounded-2xl p-8 border border-slate-800 shadow-2xl relative z-10">
-        <div className="text-center space-y-2">
-          <div className="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 text-xs font-semibold uppercase tracking-wider">
-            <Sparkles className="w-3.5 h-3.5" />
-            <span>EduTrack Platform</span>
-          </div>
-          <h2 className="text-4xl font-extrabold text-white tracking-tight">Welcome to EduTrack</h2>
-          <p className="text-slate-400 text-sm">Unified Academic Record & Recruitment Verification System</p>
-        </div>
+      <div className="relative z-10 flex min-h-[calc(100vh-3rem)] items-center justify-start">
+        <div className="w-full max-w-[520px]">
+          <div className="rounded-2xl border border-slate-300/80 bg-slate-100/95 p-6 shadow-2xl backdrop-blur-sm sm:p-7">
+            <div className="mb-6 text-center">
+              <div className="mb-4 inline-flex h-11 w-11 items-center justify-center rounded-xl border border-slate-300 bg-white shadow-sm">
+                <GraduationCap className="h-5 w-5 text-slate-900" />
+              </div>
+              <h1 className="text-3xl font-bold tracking-tight text-slate-950">EduTrack</h1>
+              <p className="mt-2 text-sm text-slate-500">Choose your portal to continue</p>
+            </div>
 
-        <div className="flex bg-slate-800/80 p-1.5 rounded-xl border border-slate-700">
-          <button
-            type="button"
-            onClick={() => { setMode('login'); setError(''); }}
-            className={`flex-1 py-2.5 rounded-lg text-sm font-semibold flex items-center justify-center space-x-2 transition-all ${
-              mode === 'login'
-                ? 'bg-gradient-to-r from-indigo-500 to-purple-600 text-white shadow-md'
-                : 'text-slate-400 hover:text-white'
-            }`}
-          >
-            <LogIn className="w-4 h-4" />
-            <span>Sign In</span>
-          </button>
-          <button
-            type="button"
-            onClick={() => { setMode('signup'); setError(''); }}
-            className={`flex-1 py-2.5 rounded-lg text-sm font-semibold flex items-center justify-center space-x-2 transition-all ${
-              mode === 'signup'
-                ? 'bg-gradient-to-r from-indigo-500 to-purple-600 text-white shadow-md'
-                : 'text-slate-400 hover:text-white'
-            }`}
-          >
-            <UserPlus className="w-4 h-4" />
-            <span>Create Account</span>
-          </button>
-        </div>
-
-        <div className="grid grid-cols-3 gap-3">
-          {roles.map((role) => {
-            const Icon = role.icon;
-            const isSelected = selectedRole === role.id;
-            return (
+            <div className="mb-5 grid grid-cols-2 gap-2 rounded-xl border border-slate-300 bg-slate-200 p-1.5">
               <button
-                key={role.id}
                 type="button"
-                onClick={() => setSelectedRole(role.id)}
-                className={`p-3 rounded-xl border flex flex-col items-center justify-center space-y-1.5 transition-all text-center ${
-                  isSelected
-                    ? 'border-indigo-500 bg-indigo-500/20 shadow-lg text-white'
-                    : 'border-slate-800 bg-slate-800/40 text-slate-400 hover:bg-slate-800 hover:text-slate-200'
+                onClick={() => {
+                  setMode('login');
+                  setError('');
+                }}
+                className={`flex items-center justify-center gap-2 rounded-lg px-3 py-2.5 text-sm font-semibold transition-colors ${
+                  mode === 'login'
+                    ? 'bg-slate-950 text-white shadow-sm'
+                    : 'text-slate-500 hover:bg-white hover:text-slate-900'
                 }`}
               >
-                <Icon className={`w-6 h-6 ${isSelected ? 'text-indigo-400' : 'text-slate-400'}`} />
-                <span className="font-semibold text-xs">{role.name}</span>
+                <LogIn className="h-4 w-4" />
+                <span>Sign In</span>
               </button>
-            );
-          })}
-        </div>
-
-        <form onSubmit={handleSubmit} className="space-y-4">
-          {mode === 'signup' && (
-            <div>
-              <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1">
-                {selectedRole === 'student' ? 'Full Name' : selectedRole === 'university' ? 'University Name' : 'Company Name'}
-              </label>
-              <input
-                type="text"
-                required
-                className="w-full px-4 py-2.5 rounded-lg bg-slate-800/90 border border-slate-700 text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all text-sm"
-                placeholder={selectedRole === 'student' ? 'e.g. Priya Sharma' : selectedRole === 'university' ? 'e.g. KIET GROUP OF INSTITUTIONS' : 'e.g. TechCorp'}
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-              />
+              <button
+                type="button"
+                onClick={() => {
+                  setMode('signup');
+                  setError('');
+                }}
+                className={`flex items-center justify-center gap-2 rounded-lg px-3 py-2.5 text-sm font-semibold transition-colors ${
+                  mode === 'signup'
+                    ? 'bg-slate-950 text-white shadow-sm'
+                    : 'text-slate-500 hover:bg-white hover:text-slate-900'
+                }`}
+              >
+                <UserPlus className="h-4 w-4" />
+                <span>Create Account</span>
+              </button>
             </div>
-          )}
 
-          <div>
-            <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1">
-              Email Address
-            </label>
-            <input
-              type="email"
-              required
-              className="w-full px-4 py-2.5 rounded-lg bg-slate-800/90 border border-slate-700 text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all text-sm"
-              placeholder="e.g. user@edutrack.edu"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-            />
-          </div>
+            <div className="mb-6 space-y-3">
+              {roles.map((role) => {
+                const Icon = role.icon;
+                const isSelected = selectedRole === role.id;
 
-          <div>
-            <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1">
-              Password
-            </label>
-            <input
-              type="password"
-              required
-              className="w-full px-4 py-2.5 rounded-lg bg-slate-800/90 border border-slate-700 text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all text-sm"
-              placeholder="Minimum 8 characters"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-            />
-          </div>
+                return (
+                  <button
+                    key={role.id}
+                    type="button"
+                    onClick={() => handleRoleChange(role.id)}
+                    className={`w-full rounded-xl border p-4 text-left transition-colors ${
+                      isSelected
+                        ? 'border-slate-500 bg-white'
+                        : 'border-slate-300 bg-slate-200 hover:bg-white'
+                    }`}
+                  >
+                    <div className="flex items-center gap-4">
+                      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-slate-300 bg-slate-100">
+                        <Icon className="h-5 w-5 text-slate-700" />
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <h2 className="font-semibold text-slate-950">{role.name}</h2>
+                        <p className="mt-0.5 text-sm text-slate-500">{role.description}</p>
+                      </div>
+                      <div
+                        className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-full border ${
+                          isSelected ? 'border-slate-950' : 'border-slate-400'
+                        }`}
+                      >
+                        {isSelected && <div className="h-2.5 w-2.5 rounded-full bg-slate-950" />}
+                      </div>
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
 
-          {mode === 'signup' && selectedRole === 'student' && (
-            <div className="space-y-3">
-              <div>
-                <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1">University / Institution</label>
-                <input
-                  type="text"
-                  required
-                  className="w-full px-4 py-2 rounded-lg bg-slate-800/90 border border-slate-700 text-white text-xs"
-                  value={university}
-                  onChange={(e) => setUniversity(e.target.value)}
-                />
-              </div>
-              <div className="grid grid-cols-2 gap-3">
+            <form onSubmit={handleSubmit} className="space-y-4">
+              {mode === 'signup' && (
                 <div>
-                  <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1">Course</label>
+                  <label className="mb-2 block text-sm font-medium text-slate-700">
+                    {selectedRole === 'student'
+                      ? 'Full Name'
+                      : selectedRole === 'university'
+                        ? 'University Name'
+                        : 'Company Name'}
+                  </label>
                   <input
                     type="text"
                     required
-                    className="w-full px-4 py-2 rounded-lg bg-slate-800/90 border border-slate-700 text-white text-xs"
-                    value={course}
-                    onChange={(e) => setCourse(e.target.value)}
+                    className="w-full rounded-lg border border-slate-300 bg-white px-4 py-3 text-sm text-slate-950 placeholder-slate-400 transition-colors focus:border-slate-500 focus:outline-none focus:ring-2 focus:ring-slate-900/10"
+                    placeholder={
+                      selectedRole === 'student'
+                        ? 'e.g. Priya Sharma'
+                        : selectedRole === 'university'
+                          ? 'e.g. KIET GROUP OF INSTITUTIONS'
+                          : 'e.g. NovaCore Systems'
+                    }
+                    value={name}
+                    onChange={(event) => setName(event.target.value)}
                   />
                 </div>
-                <div>
-                  <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1">Academic Year</label>
-                  <select
-                    className="w-full px-4 py-2 rounded-lg bg-slate-800/90 border border-slate-700 text-white text-xs"
-                    value={year}
-                    onChange={(e) => setYear(e.target.value)}
-                  >
-                    <option value="1">1st Year</option>
-                    <option value="2">2nd Year</option>
-                    <option value="3">3rd Year</option>
-                    <option value="4">4th Year</option>
-                  </select>
+              )}
+
+              <div>
+                <div className="mb-2 flex items-center justify-between gap-3">
+                  <label className="block text-sm font-medium text-slate-700">Email Address</label>
+                  {mode === 'login' && (
+                    <button
+                      type="button"
+                      onClick={fillDemoCredentials}
+                      className="text-xs font-semibold text-slate-600 underline-offset-2 hover:text-slate-950 hover:underline"
+                    >
+                      Use demo
+                    </button>
+                  )}
                 </div>
-              </div>
-            </div>
-          )}
-
-          {mode === 'signup' && selectedRole === 'company' && (
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1">Industry</label>
                 <input
-                  type="text"
+                  type="email"
                   required
-                  className="w-full px-4 py-2 rounded-lg bg-slate-800/90 border border-slate-700 text-white text-xs"
-                  value={industry}
-                  onChange={(e) => setIndustry(e.target.value)}
+                  className="w-full rounded-lg border border-slate-300 bg-white px-4 py-3 text-sm text-slate-950 placeholder-slate-400 transition-colors focus:border-slate-500 focus:outline-none focus:ring-2 focus:ring-slate-900/10"
+                  placeholder={mode === 'login' ? currentDemo.email : 'user@edutrack.edu'}
+                  value={email}
+                  onChange={(event) => setEmail(event.target.value)}
                 />
               </div>
+
               <div>
-                <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1">Company Size</label>
+                <label className="mb-2 block text-sm font-medium text-slate-700">Password</label>
                 <input
-                  type="text"
+                  type="password"
                   required
-                  className="w-full px-4 py-2 rounded-lg bg-slate-800/90 border border-slate-700 text-white text-xs"
-                  value={size}
-                  onChange={(e) => setSize(e.target.value)}
+                  className="w-full rounded-lg border border-slate-300 bg-white px-4 py-3 text-sm text-slate-950 placeholder-slate-400 transition-colors focus:border-slate-500 focus:outline-none focus:ring-2 focus:ring-slate-900/10"
+                  placeholder={mode === 'login' ? currentDemo.password : 'Minimum 8 characters'}
+                  value={password}
+                  onChange={(event) => setPassword(event.target.value)}
                 />
               </div>
-            </div>
-          )}
 
-          {error && (
-            <div className="p-3 rounded-lg bg-rose-500/10 border border-rose-500/30 text-rose-400 text-xs text-center font-medium">
-              {error}
-            </div>
-          )}
+              {mode === 'signup' && selectedRole === 'student' && (
+                <div className="space-y-3">
+                  <div>
+                    <label className="mb-2 block text-sm font-medium text-slate-700">
+                      University / Institution
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      className="w-full rounded-lg border border-slate-300 bg-white px-4 py-3 text-sm text-slate-950 placeholder-slate-400 focus:border-slate-500 focus:outline-none focus:ring-2 focus:ring-slate-900/10"
+                      value={university}
+                      onChange={(event) => setUniversity(event.target.value)}
+                    />
+                  </div>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="mb-2 block text-sm font-medium text-slate-700">Course</label>
+                      <input
+                        type="text"
+                        required
+                        className="w-full rounded-lg border border-slate-300 bg-white px-4 py-3 text-sm text-slate-950 placeholder-slate-400 focus:border-slate-500 focus:outline-none focus:ring-2 focus:ring-slate-900/10"
+                        value={course}
+                        onChange={(event) => setCourse(event.target.value)}
+                      />
+                    </div>
+                    <div>
+                      <label className="mb-2 block text-sm font-medium text-slate-700">
+                        Academic Year
+                      </label>
+                      <select
+                        className="w-full rounded-lg border border-slate-300 bg-white px-4 py-3 text-sm text-slate-950 focus:border-slate-500 focus:outline-none focus:ring-2 focus:ring-slate-900/10"
+                        value={year}
+                        onChange={(event) => setYear(event.target.value)}
+                      >
+                        <option value="1">1st Year</option>
+                        <option value="2">2nd Year</option>
+                        <option value="3">3rd Year</option>
+                        <option value="4">4th Year</option>
+                      </select>
+                    </div>
+                  </div>
+                </div>
+              )}
 
-          <button
-            type="submit"
-            disabled={isLoading}
-            className="w-full py-3 px-4 rounded-xl font-bold text-white bg-gradient-to-r from-indigo-500 via-purple-600 to-pink-600 hover:from-indigo-600 hover:to-pink-700 shadow-lg transition-all transform hover:scale-[1.01] active:scale-[0.99] disabled:opacity-50 flex items-center justify-center space-x-2 text-sm"
-          >
-            {isLoading ? (
-              <>
-                <Loader2 className="w-4 h-4 animate-spin" />
-                <span>Processing...</span>
-              </>
-            ) : (
-              <span>{mode === 'login' ? `Sign In as ${selectedRole.toUpperCase()}` : `Register ${selectedRole.toUpperCase()} Account`}</span>
-            )}
-          </button>
-        </form>
+              {mode === 'signup' && selectedRole === 'company' && (
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="mb-2 block text-sm font-medium text-slate-700">Industry</label>
+                    <input
+                      type="text"
+                      required
+                      className="w-full rounded-lg border border-slate-300 bg-white px-4 py-3 text-sm text-slate-950 placeholder-slate-400 focus:border-slate-500 focus:outline-none focus:ring-2 focus:ring-slate-900/10"
+                      value={industry}
+                      onChange={(event) => setIndustry(event.target.value)}
+                    />
+                  </div>
+                  <div>
+                    <label className="mb-2 block text-sm font-medium text-slate-700">Company Size</label>
+                    <input
+                      type="text"
+                      required
+                      className="w-full rounded-lg border border-slate-300 bg-white px-4 py-3 text-sm text-slate-950 placeholder-slate-400 focus:border-slate-500 focus:outline-none focus:ring-2 focus:ring-slate-900/10"
+                      value={size}
+                      onChange={(event) => setSize(event.target.value)}
+                    />
+                  </div>
+                </div>
+              )}
+
+              {error && (
+                <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-center text-sm font-medium text-red-700">
+                  {error}
+                </div>
+              )}
+
+              <button
+                type="submit"
+                disabled={isLoading}
+                className="flex w-full items-center justify-center gap-2 rounded-lg bg-slate-950 px-4 py-3 font-semibold text-white transition-colors hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                {isLoading ? (
+                  <>
+                    <Loader2 className="h-5 w-5 animate-spin" />
+                    <span>{mode === 'login' ? 'Signing In...' : 'Creating Account...'}</span>
+                  </>
+                ) : (
+                  <span>
+                    {mode === 'login'
+                      ? `Sign In as ${roles.find((role) => role.id === selectedRole)?.name}`
+                      : `Create ${roles.find((role) => role.id === selectedRole)?.name} Account`}
+                  </span>
+                )}
+              </button>
+            </form>
+          </div>
+
+          <p className="mt-5 text-center text-xs font-medium text-white/80">
+            EduTrack Academic Management Platform
+          </p>
+        </div>
       </div>
     </div>
   );
