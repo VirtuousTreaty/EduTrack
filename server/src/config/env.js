@@ -20,5 +20,6 @@ export const config = {
   databasePath: process.env.DB_PATH,
   jwtSecret: getJwtSecret(),
   nodeEnv: process.env.NODE_ENV || 'development',
-  port: Number(process.env.PORT || 5000)
+  port: Number(process.env.PORT || 5000),
+  seedMode: process.env.SEED_MODE || 'default'
 };
