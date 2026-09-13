@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { Certificate } from '../../types';
 import { Check, X, Eye, Clock, Award, Filter, ExternalLink, Loader2 } from 'lucide-react';
-import { api } from '../../services/api';
+import { api, resolveAssetUrl } from '../../services/api';
 
 interface ExtendedCert extends Certificate {
   studentName?: string;
@@ -253,7 +253,7 @@ const CertificateApproval: React.FC = () => {
                 <div className="p-3 bg-indigo-50 border border-indigo-200 rounded-lg flex items-center justify-between">
                   <span className="text-xs font-semibold text-indigo-900">Attached Certificate Document</span>
                   <a
-                    href={selectedCertificate.fileUrl.startsWith('http') ? selectedCertificate.fileUrl : `http://localhost:5000${selectedCertificate.fileUrl}`}
+                    href={resolveAssetUrl(selectedCertificate.fileUrl)}
                     target="_blank"
                     rel="noreferrer"
                     className="px-3 py-1.5 bg-indigo-600 text-white rounded text-xs font-bold flex items-center gap-1 hover:bg-indigo-700"

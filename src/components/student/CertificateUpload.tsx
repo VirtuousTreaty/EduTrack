@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Certificate } from '../../types';
 import { Upload, File, Check, X, Clock, Award, AlertCircle, ExternalLink } from 'lucide-react';
-import { api } from '../../services/api';
+import { api, resolveAssetUrl } from '../../services/api';
 
 interface CertificateUploadProps {
   studentId: string;
@@ -297,7 +297,7 @@ const CertificateUpload: React.FC<CertificateUploadProps> = ({ certificates: ini
                       </span>
                       {cert.fileUrl && (
                         <a
-                          href={cert.fileUrl.startsWith('http') ? cert.fileUrl : `http://localhost:5000${cert.fileUrl}`}
+                          href={resolveAssetUrl(cert.fileUrl)}
                           target="_blank"
                           rel="noreferrer"
                           className="inline-flex items-center space-x-1 text-xs text-blue-600 hover:underline font-medium"

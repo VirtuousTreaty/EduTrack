@@ -2,6 +2,14 @@ const API_BASE_URL =
   import.meta.env.VITE_API_BASE_URL ||
   `${window.location.protocol}//${window.location.hostname}:5000/api`;
 
+export function resolveAssetUrl(path: string) {
+  if (!path || path.startsWith('http')) {
+    return path;
+  }
+
+  return `${API_BASE_URL.replace(/\/api\/?$/, '')}${path.startsWith('/') ? path : `/${path}`}`;
+}
+
 function getAuthHeaders(): HeadersInit {
   const token = localStorage.getItem('edutrack_token');
   return token ? { 'Authorization': `Bearer ${token}` } : {};
