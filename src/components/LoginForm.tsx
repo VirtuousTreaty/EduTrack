@@ -59,13 +59,6 @@ const LoginForm: React.FC = () => {
 
   const currentDemo = demoCredentials[selectedRole];
 
-  const fillDemoCredentials = () => {
-    setMode('login');
-    setEmail(currentDemo.email);
-    setPassword(currentDemo.password);
-    setError('');
-  };
-
   const handleRoleChange = (role: Role) => {
     setSelectedRole(role);
     setError('');
@@ -228,18 +221,7 @@ const LoginForm: React.FC = () => {
               )}
 
               <div>
-                <div className="mb-2 flex items-center justify-between gap-3">
-                  <label className="block text-sm font-medium text-slate-700">Email Address</label>
-                  {mode === 'login' && (
-                    <button
-                      type="button"
-                      onClick={fillDemoCredentials}
-                      className="text-xs font-semibold text-slate-600 underline-offset-2 hover:text-slate-950 hover:underline"
-                    >
-                      Use demo
-                    </button>
-                  )}
-                </div>
+                <label className="mb-2 block text-sm font-medium text-slate-700">Email Address</label>
                 <input
                   type="email"
                   required
