@@ -23,3 +23,9 @@ dist-ssr
 *.sln
 *.sw?
 .env
+
+# Runtime backend artifacts
+server/.env
+server/data/*.sqlite
+server/data/*.sqlite-*
+server/uploads/

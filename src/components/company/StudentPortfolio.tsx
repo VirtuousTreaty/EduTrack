@@ -1,16 +1,34 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Student } from '../../types';
-import { Eye, Download, Star, Award, GraduationCap, MapPin, Calendar, Briefcase } from 'lucide-react';
+import { Eye, Download, Star, Award, MapPin, Calendar, Briefcase, Loader2 } from 'lucide-react';
 import jsPDF from 'jspdf';
-import html2canvas from 'html2canvas';
+import { api } from '../../services/api';
 
-interface StudentPortfolioProps {
-  students: Student[];
-}
-
-const StudentPortfolio: React.FC<StudentPortfolioProps> = ({ students }) => {
+const StudentPortfolio: React.FC = () => {
+  const [students, setStudents] = useState<Student[]>([]);
   const [selectedStudent, setSelectedStudent] = useState<Student | null>(null);
   const [sortBy, setSortBy] = useState<'gpa' | 'certificates' | 'activities'>('gpa');
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+
+  useEffect(() => {
+    async function loadPortfolios() {
+      try {
+        setLoading(true);
+        setError('');
+        const res = await api.searchCandidates();
+        if (res.success && res.students) {
+          setStudents(res.students);
+        }
+      } catch (err: any) {
+        setError(err.message || 'Failed to load student portfolios');
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    loadPortfolios();
+  }, []);
 
   const sortedStudents = [...students].sort((a, b) => {
     switch (sortBy) {
@@ -120,6 +138,23 @@ const StudentPortfolio: React.FC<StudentPortfolioProps> = ({ students }) => {
     return 'text-red-600 bg-red-100 border-red-200';
   };
 
+  if (loading) {
+    return (
+      <div className="py-20 flex flex-col justify-center items-center">
+        <Loader2 className="w-8 h-8 text-purple-600 animate-spin mb-2" />
+        <p className="text-slate-600 text-sm font-medium">Loading student portfolios...</p>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="m-6 p-4 bg-rose-50 border border-rose-200 text-rose-700 rounded-lg text-sm font-medium">
+        {error}
+      </div>
+    );
+  }
+
   return (
     <div className="p-6">
       <div className="flex justify-between items-center mb-6">
@@ -142,8 +177,15 @@ const StudentPortfolio: React.FC<StudentPortfolioProps> = ({ students }) => {
       </div>
 
       {/* Portfolio Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
-        {sortedStudents.map((student) => (
+      {sortedStudents.length === 0 ? (
+        <div className="text-center py-12 bg-slate-50 rounded-lg border border-slate-200">
+          <Briefcase className="w-12 h-12 text-slate-400 mx-auto mb-3" />
+          <h4 className="text-lg font-semibold text-slate-800">No portfolios found</h4>
+          <p className="text-sm text-slate-500">Add student accounts and records to populate this page.</p>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
+          {sortedStudents.map((student) => (
           <div key={student.id} className="bg-white border border-gray-200 rounded-lg overflow-hidden hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1">
             {/* Header */}
             <div className="bg-gradient-to-r from-purple-500 to-indigo-600 p-6 text-white">
@@ -259,8 +301,9 @@ const StudentPortfolio: React.FC<StudentPortfolioProps> = ({ students }) => {
               </div>
             </div>
           </div>
-        ))}
-      </div>
+          ))}
+        </div>
+      )}
 
       {/* Full Portfolio Modal */}
       {selectedStudent && (

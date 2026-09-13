@@ -1,16 +1,15 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import Layout from '../Layout';
-import { mockStudents } from '../../data/mockData';
-import { Student, Certificate } from '../../types';
+import { Student } from '../../types';
 import StudentList from './StudentList';
 import CertificateApproval from './CertificateApproval';
 import UniversityReports from './UniversityReports';
 import UniversityAnalytics from './UniversityAnalytics';
-import { Users, Award, FileText, BarChart3, GraduationCap } from 'lucide-react';
+import { Users, Award, FileText, BarChart3, GraduationCap, Loader2 } from 'lucide-react';
+import { api } from '../../services/api';
 
 const UniversityDashboard: React.FC = () => {
   const [activeTab, setActiveTab] = useState('overview');
-  const [students] = useState<Student[]>(mockStudents);
 
   const tabs = [
     { id: 'overview', name: 'Overview', icon: GraduationCap },
@@ -29,24 +28,23 @@ const UniversityDashboard: React.FC = () => {
   const renderTabContent = () => {
     switch (activeTab) {
       case 'overview':
-        return <UniversityOverview students={students} />;
+        return <UniversityOverview />;
       case 'students':
-        return <StudentList students={students} />;
+        return <StudentList />;
       case 'certificates':
-        return <CertificateApproval students={students} />;
+        return <CertificateApproval />;
       case 'reports':
-        return <UniversityReports students={students} />;
+        return <UniversityReports />;
       case 'analytics':
-        return <UniversityAnalytics students={students} />;
+        return <UniversityAnalytics />;
       default:
-        return <UniversityOverview students={students} />;
+        return <UniversityOverview />;
     }
   };
 
   return (
     <Layout title="University Dashboard">
       <div className="space-y-6">
-        {/* Tab Navigation */}
         <div className="flex space-x-1 bg-gray-100 p-1 rounded-lg overflow-x-auto">
           {tabs.map((tab) => {
             const Icon = tab.icon;
@@ -63,7 +61,6 @@ const UniversityDashboard: React.FC = () => {
           })}
         </div>
 
-        {/* Tab Content */}
         <div className="bg-white rounded-lg shadow-sm border border-gray-200">
           {renderTabContent()}
         </div>
@@ -72,14 +69,76 @@ const UniversityDashboard: React.FC = () => {
   );
 };
 
-const UniversityOverview: React.FC<{ students: Student[] }> = ({ students }) => {
-  const totalStudents = students.length;
-  const averageGPA = students.reduce((sum, student) => sum + student.gpa, 0) / totalStudents;
-  const totalCertificates = students.reduce((sum, student) => sum + student.certificates.length, 0);
-  const pendingCertificates = students.reduce((sum, student) => 
-    sum + student.certificates.filter(cert => cert.status === 'pending').length, 0
+const UniversityOverview: React.FC = () => {
+  const [students, setStudents] = useState<Student[]>([]);
+  const [analytics, setAnalytics] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+
+  useEffect(() => {
+    async function loadOverview() {
+      try {
+        setLoading(true);
+        setError('');
+        const [studentsRes, analyticsRes] = await Promise.all([
+          api.getUniversityStudents(),
+          api.getUniversityAnalytics()
+        ]);
+
+        if (studentsRes.success && studentsRes.students) {
+          setStudents(studentsRes.students);
+        }
+        if (analyticsRes.success && analyticsRes.analytics) {
+          setAnalytics(analyticsRes.analytics);
+        }
+      } catch (err: any) {
+        setError(err.message || 'Failed to load university overview');
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    loadOverview();
+  }, []);
+
+  if (loading) {
+    return (
+      <div className="py-20 flex flex-col justify-center items-center">
+        <Loader2 className="w-8 h-8 text-emerald-600 animate-spin mb-2" />
+        <p className="text-slate-600 text-sm font-medium">Loading university data...</p>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="m-6 p-4 bg-rose-50 border border-rose-200 text-rose-700 rounded-lg text-sm font-medium">
+        {error}
+      </div>
+    );
+  }
+
+  const totalStudents = analytics?.totalStudents ?? students.length;
+  const averageGPA = analytics?.averageGpa ?? (
+    students.length > 0
+      ? students.reduce((sum, student) => sum + student.gpa, 0) / students.length
+      : 0
+  );
+  const totalCertificates = analytics?.totalCertificates ?? students.reduce((sum, student) => sum + student.certificates.length, 0);
+  const pendingCertificates = analytics?.pendingCertificates ?? students.reduce(
+    (sum, student) => sum + student.certificates.filter(cert => cert.status === 'pending').length,
+    0
   );
   const totalActivities = students.reduce((sum, student) => sum + student.activities.length, 0);
+
+  const topStudents = [...students].sort((a, b) => b.gpa - a.gpa).slice(0, 5);
+  const pendingSubmissions = students
+    .flatMap(student =>
+      student.certificates.map(cert => ({ ...cert, studentName: student.name, studentAvatar: student.avatar }))
+    )
+    .filter(cert => cert.status === 'pending')
+    .sort((a, b) => new Date(b.dateIssued).getTime() - new Date(a.dateIssued).getTime())
+    .slice(0, 5);
 
   return (
     <div className="p-6">
@@ -88,7 +147,6 @@ const UniversityOverview: React.FC<{ students: Student[] }> = ({ students }) => 
         <p className="text-gray-600">Monitor student performance and manage university operations</p>
       </div>
 
-      {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 mb-8">
         <div className="bg-gradient-to-r from-blue-500 to-blue-600 rounded-lg p-6 text-white">
           <div className="flex items-center justify-between">
@@ -104,7 +162,7 @@ const UniversityOverview: React.FC<{ students: Student[] }> = ({ students }) => 
           <div className="flex items-center justify-between">
             <div>
               <p className="text-green-100">Average GPA</p>
-              <p className="text-3xl font-bold">{averageGPA.toFixed(2)}</p>
+              <p className="text-3xl font-bold">{Number(averageGPA).toFixed(2)}</p>
             </div>
             <GraduationCap className="w-8 h-8 text-green-200" />
           </div>
@@ -141,21 +199,20 @@ const UniversityOverview: React.FC<{ students: Student[] }> = ({ students }) => 
         </div>
       </div>
 
-      {/* Recent Students */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <div>
           <h4 className="text-lg font-semibold text-gray-900 mb-4">Top Performing Students</h4>
           <div className="space-y-3">
-            {students
-              .sort((a, b) => b.gpa - a.gpa)
-              .slice(0, 5)
-              .map((student, index) => (
+            {topStudents.length === 0 ? (
+              <p className="text-sm text-slate-500 bg-slate-50 rounded-lg p-4">No student records found yet.</p>
+            ) : (
+              topStudents.map((student, index) => (
                 <div key={student.id} className="flex items-center space-x-4 p-4 bg-gray-50 rounded-lg">
                   <div className="flex-shrink-0 w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
                     <span className="text-green-600 font-semibold text-sm">#{index + 1}</span>
                   </div>
                   <img
-                    src={student.avatar || 'https://images.pexels.com/photos/1239291/pexels-photo-1239291.jpeg?auto=compress&cs=tinysrgb&w=400'}
+                    src={student.avatar || 'https://api.dicebear.com/7.x/avataaars/svg?seed=student'}
                     alt={student.name}
                     className="w-10 h-10 rounded-full object-cover"
                   />
@@ -169,24 +226,21 @@ const UniversityOverview: React.FC<{ students: Student[] }> = ({ students }) => 
                     </span>
                   </div>
                 </div>
-              ))}
+              ))
+            )}
           </div>
         </div>
 
         <div>
           <h4 className="text-lg font-semibold text-gray-900 mb-4">Recent Certificate Submissions</h4>
           <div className="space-y-3">
-            {students
-              .flatMap(student => 
-                student.certificates.map(cert => ({ ...cert, studentName: student.name, studentAvatar: student.avatar }))
-              )
-              .filter(cert => cert.status === 'pending')
-              .sort((a, b) => new Date(b.dateIssued).getTime() - new Date(a.dateIssued).getTime())
-              .slice(0, 5)
-              .map((cert) => (
+            {pendingSubmissions.length === 0 ? (
+              <p className="text-sm text-slate-500 bg-slate-50 rounded-lg p-4">No pending certificate submissions.</p>
+            ) : (
+              pendingSubmissions.map((cert) => (
                 <div key={cert.id} className="flex items-center space-x-4 p-4 bg-gray-50 rounded-lg">
                   <img
-                    src={cert.studentAvatar || 'https://images.pexels.com/photos/1239291/pexels-photo-1239291.jpeg?auto=compress&cs=tinysrgb&w=400'}
+                    src={cert.studentAvatar || 'https://api.dicebear.com/7.x/avataaars/svg?seed=student'}
                     alt={cert.studentName}
                     className="w-10 h-10 rounded-full object-cover"
                   />
@@ -200,7 +254,8 @@ const UniversityOverview: React.FC<{ students: Student[] }> = ({ students }) => 
                     </span>
                   </div>
                 </div>
-              ))}
+              ))
+            )}
           </div>
         </div>
       </div>

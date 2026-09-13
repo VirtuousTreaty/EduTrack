@@ -1,8 +1,5 @@
 import jwt from 'jsonwebtoken';
-import dotenv from 'dotenv';
-dotenv.config();
-
-const JWT_SECRET = process.env.JWT_SECRET || 'edutrack_jwt_secret_key_2027_super_secure';
+import { config } from '../config/env.js';
 
 export function authenticateToken(req, res, next) {
   const authHeader = req.headers['authorization'];
@@ -12,7 +9,7 @@ export function authenticateToken(req, res, next) {
     return res.status(401).json({ success: false, error: 'Access token required' });
   }
 
-  jwt.verify(token, JWT_SECRET, (err, user) => {
+  jwt.verify(token, config.jwtSecret, (err, user) => {
     if (err) {
       return res.status(403).json({ success: false, error: 'Invalid or expired token' });
     }
@@ -34,5 +31,5 @@ export function requireRole(allowedRoles) {
 }
 
 export function generateToken(payload) {
-  return jwt.sign(payload, JWT_SECRET, { expiresIn: '7d' });
+  return jwt.sign(payload, config.jwtSecret, { expiresIn: '7d' });
 }

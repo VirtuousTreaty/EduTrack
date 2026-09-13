@@ -9,15 +9,15 @@ const LoginForm: React.FC = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [name, setName] = useState('');
-  const [university, setUniversity] = useState('KIET GROUP OF INSTITUTIONS');
-  const [course, setCourse] = useState('Computer Science and Engineering');
-  const [year, setYear] = useState('3');
-  const [industry, setIndustry] = useState('Technology');
-  const [size, setSize] = useState('100-500 employees');
-  
+  const [university, setUniversity] = useState('');
+  const [course, setCourse] = useState('');
+  const [year, setYear] = useState('1');
+  const [industry, setIndustry] = useState('');
+  const [size, setSize] = useState('');
+
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
-  
+
   const { login, signup } = useAuth();
   const navigate = useNavigate();
 
@@ -25,38 +25,19 @@ const LoginForm: React.FC = () => {
     {
       id: 'student' as const,
       name: 'Student',
-      icon: GraduationCap,
-      color: 'from-blue-500 to-indigo-600',
-      description: 'Access your academic records, certificates & resume'
+      icon: GraduationCap
     },
     {
       id: 'university' as const,
       name: 'University',
-      icon: Building2,
-      color: 'from-emerald-500 to-teal-600',
-      description: 'Manage student records & verify certificates'
+      icon: Building2
     },
     {
       id: 'company' as const,
       name: 'Company',
-      icon: Briefcase,
-      color: 'from-purple-500 to-violet-600',
-      description: 'Discover talents & match top candidates'
+      icon: Briefcase
     }
   ];
-
-  const fillDemoCredentials = (role: 'student' | 'university' | 'company') => {
-    setSelectedRole(role);
-    setMode('login');
-    const credentials = {
-      student: { email: 'alice@student.edu', password: 'password123' },
-      university: { email: 'admin@techuniversity.edu', password: 'password123' },
-      company: { email: 'recruiter@techcorp.com', password: 'password123' }
-    };
-    setEmail(credentials[role].email);
-    setPassword(credentials[role].password);
-    setError('');
-  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -76,7 +57,7 @@ const LoginForm: React.FC = () => {
           email,
           password,
           role: selectedRole,
-          name: name || (selectedRole === 'student' ? 'Demo Student' : selectedRole === 'university' ? 'Demo University' : 'Demo Company'),
+          name,
           university,
           course,
           year,
@@ -98,7 +79,6 @@ const LoginForm: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-slate-950 flex items-center justify-center p-4 relative overflow-hidden">
-      {/* Background glow effects */}
       <div className="absolute -top-40 -left-40 w-96 h-96 bg-indigo-600/30 rounded-full blur-3xl pointer-events-none"></div>
       <div className="absolute -bottom-40 -right-40 w-96 h-96 bg-purple-600/30 rounded-full blur-3xl pointer-events-none"></div>
 
@@ -112,7 +92,6 @@ const LoginForm: React.FC = () => {
           <p className="text-slate-400 text-sm">Unified Academic Record & Recruitment Verification System</p>
         </div>
 
-        {/* Mode Toggle (Login vs Register) */}
         <div className="flex bg-slate-800/80 p-1.5 rounded-xl border border-slate-700">
           <button
             type="button"
@@ -140,37 +119,6 @@ const LoginForm: React.FC = () => {
           </button>
         </div>
 
-        {/* Quick Demo Login Preset Buttons */}
-        {mode === 'login' && (
-          <div className="space-y-2">
-            <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Quick Fill Demo Credentials:</p>
-            <div className="grid grid-cols-3 gap-2">
-              <button
-                type="button"
-                onClick={() => fillDemoCredentials('student')}
-                className="py-2 px-3 rounded-lg bg-blue-500/10 border border-blue-500/30 text-blue-300 hover:bg-blue-500/20 text-xs font-medium transition-colors text-center"
-              >
-                🎓 Student
-              </button>
-              <button
-                type="button"
-                onClick={() => fillDemoCredentials('university')}
-                className="py-2 px-3 rounded-lg bg-emerald-500/10 border border-emerald-500/30 text-emerald-300 hover:bg-emerald-500/20 text-xs font-medium transition-colors text-center"
-              >
-                🏛️ University
-              </button>
-              <button
-                type="button"
-                onClick={() => fillDemoCredentials('company')}
-                className="py-2 px-3 rounded-lg bg-purple-500/10 border border-purple-500/30 text-purple-300 hover:bg-purple-500/20 text-xs font-medium transition-colors text-center"
-              >
-                💼 Company
-              </button>
-            </div>
-          </div>
-        )}
-
-        {/* Role Selector */}
         <div className="grid grid-cols-3 gap-3">
           {roles.map((role) => {
             const Icon = role.icon;
@@ -203,7 +151,7 @@ const LoginForm: React.FC = () => {
                 type="text"
                 required
                 className="w-full px-4 py-2.5 rounded-lg bg-slate-800/90 border border-slate-700 text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all text-sm"
-                placeholder={selectedRole === 'student' ? 'e.g. Anshika Middha' : selectedRole === 'university' ? 'e.g. KIET GROUP OF INSTITUTIONS' : 'e.g. TechCorp'}
+                placeholder={selectedRole === 'student' ? 'e.g. Priya Sharma' : selectedRole === 'university' ? 'e.g. KIET GROUP OF INSTITUTIONS' : 'e.g. TechCorp'}
                 value={name}
                 onChange={(e) => setName(e.target.value)}
               />
@@ -232,35 +180,73 @@ const LoginForm: React.FC = () => {
               type="password"
               required
               className="w-full px-4 py-2.5 rounded-lg bg-slate-800/90 border border-slate-700 text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all text-sm"
-              placeholder="••••••••"
+              placeholder="Minimum 8 characters"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
             />
           </div>
 
           {mode === 'signup' && selectedRole === 'student' && (
-            <div className="grid grid-cols-2 gap-3">
+            <div className="space-y-3">
               <div>
-                <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1">Course</label>
+                <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1">University / Institution</label>
                 <input
                   type="text"
+                  required
                   className="w-full px-4 py-2 rounded-lg bg-slate-800/90 border border-slate-700 text-white text-xs"
-                  value={course}
-                  onChange={(e) => setCourse(e.target.value)}
+                  value={university}
+                  onChange={(e) => setUniversity(e.target.value)}
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1">Course</label>
+                  <input
+                    type="text"
+                    required
+                    className="w-full px-4 py-2 rounded-lg bg-slate-800/90 border border-slate-700 text-white text-xs"
+                    value={course}
+                    onChange={(e) => setCourse(e.target.value)}
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1">Academic Year</label>
+                  <select
+                    className="w-full px-4 py-2 rounded-lg bg-slate-800/90 border border-slate-700 text-white text-xs"
+                    value={year}
+                    onChange={(e) => setYear(e.target.value)}
+                  >
+                    <option value="1">1st Year</option>
+                    <option value="2">2nd Year</option>
+                    <option value="3">3rd Year</option>
+                    <option value="4">4th Year</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {mode === 'signup' && selectedRole === 'company' && (
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1">Industry</label>
+                <input
+                  type="text"
+                  required
+                  className="w-full px-4 py-2 rounded-lg bg-slate-800/90 border border-slate-700 text-white text-xs"
+                  value={industry}
+                  onChange={(e) => setIndustry(e.target.value)}
                 />
               </div>
               <div>
-                <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1">Academic Year</label>
-                <select
+                <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1">Company Size</label>
+                <input
+                  type="text"
+                  required
                   className="w-full px-4 py-2 rounded-lg bg-slate-800/90 border border-slate-700 text-white text-xs"
-                  value={year}
-                  onChange={(e) => setYear(e.target.value)}
-                >
-                  <option value="1">1st Year</option>
-                  <option value="2">2nd Year</option>
-                  <option value="3">3rd Year</option>
-                  <option value="4">4th Year</option>
-                </select>
+                  value={size}
+                  onChange={(e) => setSize(e.target.value)}
+                />
               </div>
             </div>
           )}

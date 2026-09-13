@@ -3,16 +3,17 @@ import { open } from 'sqlite';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import fs from 'fs';
+import { config } from './env.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-const dataDir = path.join(__dirname, '../../data');
+const dataDir = config.databasePath ? path.dirname(config.databasePath) : path.join(__dirname, '../../data');
 if (!fs.existsSync(dataDir)) {
   fs.mkdirSync(dataDir, { recursive: true });
 }
 
-const dbPath = path.join(dataDir, 'edutrack.sqlite');
+const dbPath = config.databasePath || path.join(dataDir, 'edutrack.sqlite');
 
 let db = null;
 
@@ -30,6 +31,12 @@ export async function getDb() {
   await initSchema(db);
 
   return db;
+}
+
+export async function closeDb() {
+  if (!db) return;
+  await db.close();
+  db = null;
 }
 
 async function initSchema(database) {

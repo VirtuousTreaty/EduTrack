@@ -4,7 +4,7 @@ import { authenticateToken, requireRole } from '../middleware/authMiddleware.js'
 
 const router = express.Router();
 
-router.get('/students', authenticateToken, requireRole(['university', 'company']), getStudentsList);
+router.get('/students', authenticateToken, requireRole(['university']), getStudentsList);
 router.get('/analytics', authenticateToken, requireRole(['university']), getUniversityAnalytics);
 router.get('/reports', authenticateToken, requireRole(['university']), getUniversityReports);
 

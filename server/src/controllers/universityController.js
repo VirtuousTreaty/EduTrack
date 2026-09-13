@@ -1,13 +1,28 @@
 import { getDb } from '../config/db.js';
+import { getScopedUniversityName } from '../utils/accessControl.js';
+import { hydrateStudent } from '../utils/formatters.js';
+
+async function requireUniversityScope(db, req, res) {
+  const universityName = await getScopedUniversityName(db, req.user);
+  if (!universityName) {
+    res.status(403).json({ success: false, error: 'University profile not found for this account' });
+    return null;
+  }
+  return universityName;
+}
 
 export async function getStudentsList(req, res) {
   try {
     const db = await getDb();
+    const universityName = await requireUniversityScope(db, req, res);
+    if (!universityName) return;
+
     const { course, year, search } = req.query;
 
     let query = 'SELECT * FROM students';
     const params = [];
-    const conditions = [];
+    const conditions = ['university = ?'];
+    params.push(universityName);
 
     if (course && course !== 'all') {
       conditions.push('course = ?');
@@ -15,7 +30,7 @@ export async function getStudentsList(req, res) {
     }
     if (year && year !== 'all') {
       conditions.push('year = ?');
-      params.push(parseInt(year));
+      params.push(parseInt(year, 10));
     }
     if (search) {
       conditions.push('(name LIKE ? OR email LIKE ? OR university LIKE ?)');
@@ -23,61 +38,11 @@ export async function getStudentsList(req, res) {
       params.push(term, term, term);
     }
 
-    if (conditions.length > 0) {
-      query += ' WHERE ' + conditions.join(' AND ');
-    }
-
+    query += ' WHERE ' + conditions.join(' AND ');
     query += ' ORDER BY name ASC';
 
     const students = await db.all(query, params);
-
-    // Fetch related records for each student
-    const result = await Promise.all(
-      students.map(async s => {
-        const academicRecords = await db.all('SELECT * FROM academic_records WHERE student_id = ?', [s.id]);
-        const certificates = await db.all('SELECT * FROM certificates WHERE student_id = ?', [s.id]);
-        const activities = await db.all('SELECT * FROM activities WHERE student_id = ?', [s.id]);
-
-        return {
-          id: s.id,
-          userId: s.user_id,
-          name: s.name,
-          email: s.email,
-          university: s.university,
-          course: s.course,
-          year: s.year,
-          gpa: s.gpa,
-          skills: JSON.parse(s.skills || '[]'),
-          avatar: s.avatar,
-          academicRecords: academicRecords.map(r => ({
-            id: r.id,
-            semester: r.semester,
-            year: r.year,
-            gpa: r.gpa,
-            subjects: JSON.parse(r.subjects || '[]')
-          })),
-          certificates: certificates.map(c => ({
-            id: c.id,
-            studentId: c.student_id,
-            title: c.title,
-            issuer: c.issuer,
-            dateIssued: c.date_issued,
-            status: c.status,
-            type: c.type,
-            fileUrl: c.file_url
-          })),
-          activities: activities.map(a => ({
-            id: a.id,
-            type: a.type,
-            title: a.title,
-            description: a.description,
-            date: a.date,
-            hours: a.hours,
-            skills: JSON.parse(a.skills || '[]')
-          }))
-        };
-      })
-    );
+    const result = await Promise.all(students.map(student => hydrateStudent(db, student)));
 
     return res.json({ success: true, students: result });
   } catch (error) {
@@ -89,24 +54,57 @@ export async function getStudentsList(req, res) {
 export async function getUniversityAnalytics(req, res) {
   try {
     const db = await getDb();
+    const universityName = await requireUniversityScope(db, req, res);
+    if (!universityName) return;
 
-    const totalStudentsObj = await db.get('SELECT COUNT(*) as count FROM students');
-    const totalCertsObj = await db.get('SELECT COUNT(*) as count FROM certificates');
-    const pendingCertsObj = await db.get("SELECT COUNT(*) as count FROM certificates WHERE status = 'pending'");
-    const approvedCertsObj = await db.get("SELECT COUNT(*) as count FROM certificates WHERE status = 'approved'");
-    const rejectedCertsObj = await db.get("SELECT COUNT(*) as count FROM certificates WHERE status = 'rejected'");
-    const avgGpaObj = await db.get('SELECT AVG(gpa) as avgGpa FROM students');
+    const totalStudentsObj = await db.get('SELECT COUNT(*) as count FROM students WHERE university = ?', [universityName]);
+    const totalCertsObj = await db.get(
+      `SELECT COUNT(*) as count
+       FROM certificates c
+       JOIN students s ON c.student_id = s.id
+       WHERE s.university = ?`,
+      [universityName]
+    );
+    const pendingCertsObj = await db.get(
+      `SELECT COUNT(*) as count
+       FROM certificates c
+       JOIN students s ON c.student_id = s.id
+       WHERE s.university = ? AND c.status = 'pending'`,
+      [universityName]
+    );
+    const approvedCertsObj = await db.get(
+      `SELECT COUNT(*) as count
+       FROM certificates c
+       JOIN students s ON c.student_id = s.id
+       WHERE s.university = ? AND c.status = 'approved'`,
+      [universityName]
+    );
+    const rejectedCertsObj = await db.get(
+      `SELECT COUNT(*) as count
+       FROM certificates c
+       JOIN students s ON c.student_id = s.id
+       WHERE s.university = ? AND c.status = 'rejected'`,
+      [universityName]
+    );
+    const avgGpaObj = await db.get('SELECT AVG(gpa) as avgGpa FROM students WHERE university = ?', [universityName]);
 
     const courseDistribution = await db.all(
-      'SELECT course, COUNT(*) as count, AVG(gpa) as avgGpa FROM students GROUP BY course'
+      'SELECT course, COUNT(*) as count, AVG(gpa) as avgGpa FROM students WHERE university = ? GROUP BY course',
+      [universityName]
     );
 
     const yearDistribution = await db.all(
-      'SELECT year, COUNT(*) as count FROM students GROUP BY year ORDER BY year ASC'
+      'SELECT year, COUNT(*) as count FROM students WHERE university = ? GROUP BY year ORDER BY year ASC',
+      [universityName]
     );
 
     const certificateTypeStats = await db.all(
-      'SELECT type, status, COUNT(*) as count FROM certificates GROUP BY type, status'
+      `SELECT c.type, c.status, COUNT(*) as count
+       FROM certificates c
+       JOIN students s ON c.student_id = s.id
+       WHERE s.university = ?
+       GROUP BY c.type, c.status`,
+      [universityName]
     );
 
     return res.json({
@@ -132,21 +130,31 @@ export async function getUniversityAnalytics(req, res) {
 export async function getUniversityReports(req, res) {
   try {
     const db = await getDb();
-    
-    const students = await db.all('SELECT * FROM students ORDER BY gpa DESC');
-    const certs = await db.all('SELECT status, count(*) as total FROM certificates GROUP BY status');
+    const universityName = await requireUniversityScope(db, req, res);
+    if (!universityName) return;
+
+    const students = await db.all('SELECT * FROM students WHERE university = ? ORDER BY gpa DESC', [universityName]);
+    const certs = await db.all(
+      `SELECT c.status, COUNT(*) as total
+       FROM certificates c
+       JOIN students s ON c.student_id = s.id
+       WHERE s.university = ?
+       GROUP BY c.status`,
+      [universityName]
+    );
 
     return res.json({
       success: true,
       report: {
         generatedAt: new Date().toISOString(),
+        university: universityName,
         totalStudents: students.length,
-        topPerformers: students.slice(0, 5).map(s => ({
-          id: s.id,
-          name: s.name,
-          course: s.course,
-          year: s.year,
-          gpa: s.gpa
+        topPerformers: students.slice(0, 5).map(student => ({
+          id: student.id,
+          name: student.name,
+          course: student.course,
+          year: student.year,
+          gpa: student.gpa
         })),
         certificateBreakdown: certs
       }

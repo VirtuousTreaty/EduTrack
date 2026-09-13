@@ -1,23 +1,46 @@
 import bcrypt from 'bcryptjs';
 import { getDb } from '../config/db.js';
 import { generateToken } from '../middleware/authMiddleware.js';
+import {
+  isValidEmail,
+  normalizeEmail,
+  requireEnum,
+  requireString,
+  roles,
+  sendValidationError,
+  validateAcademicYear
+} from '../utils/validation.js';
 
 export async function signup(req, res) {
   try {
     const { email, password, role, name, university, course, year, industry, size } = req.body;
+    const normalizedEmail = normalizeEmail(email);
+    const errors = [];
 
-    if (!email || !password || !role || !name) {
-      return res.status(400).json({ success: false, error: 'Email, password, role, and name are required' });
+    requireString(normalizedEmail, 'Email', errors);
+    if (normalizedEmail && !isValidEmail(normalizedEmail)) {
+      errors.push('Email must be a valid email address');
+    }
+    requireString(password, 'Password', errors);
+    if (password && password.length < 8) {
+      errors.push('Password must be at least 8 characters');
+    }
+    requireString(name, 'Name', errors);
+    requireEnum(role, roles, 'Role', errors);
+
+    let studentYear = 1;
+    if (role === 'student' && year !== undefined && year !== '') {
+      studentYear = validateAcademicYear(year, 'Academic year', errors);
     }
 
-    if (!['student', 'university', 'company'].includes(role)) {
-      return res.status(400).json({ success: false, error: 'Invalid role' });
+    if (errors.length > 0) {
+      return sendValidationError(res, errors);
     }
 
     const db = await getDb();
 
     // Check if user already exists
-    const existingUser = await db.get('SELECT * FROM users WHERE email = ?', [email]);
+    const existingUser = await db.get('SELECT * FROM users WHERE email = ?', [normalizedEmail]);
     if (existingUser) {
       return res.status(400).json({ success: false, error: 'User with this email already exists' });
     }
@@ -28,7 +51,7 @@ export async function signup(req, res) {
 
     await db.run(
       'INSERT INTO users (id, email, password_hash, role, name, avatar) VALUES (?, ?, ?, ?, ?, ?)',
-      [userId, email, passwordHash, role, name, defaultAvatar]
+      [userId, normalizedEmail, passwordHash, role, name, defaultAvatar]
     );
 
     let roleData = {};
@@ -37,20 +60,19 @@ export async function signup(req, res) {
       const studentId = 'st-' + Date.now();
       const studentUniv = university || 'KIET GROUP OF INSTITUTIONS';
       const studentCourse = course || 'Computer Science and Engineering';
-      const studentYear = parseInt(year) || 1;
       const defaultSkills = JSON.stringify(['JavaScript', 'Problem Solving']);
 
       await db.run(
         `INSERT INTO students (id, user_id, name, email, university, course, year, gpa, skills, avatar) 
          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-        [studentId, userId, name, email, studentUniv, studentCourse, studentYear, 3.5, defaultSkills, defaultAvatar]
+        [studentId, userId, name, normalizedEmail, studentUniv, studentCourse, studentYear, 3.5, defaultSkills, defaultAvatar]
       );
       roleData = { id: studentId, university: studentUniv, course: studentCourse, year: studentYear, gpa: 3.5 };
     } else if (role === 'university') {
       const univId = 'univ-' + Date.now();
       await db.run(
         'INSERT INTO universities (id, user_id, name, email) VALUES (?, ?, ?, ?)',
-        [univId, userId, name, email]
+        [univId, userId, name, normalizedEmail]
       );
       roleData = { id: univId };
     } else if (role === 'company') {
@@ -59,12 +81,12 @@ export async function signup(req, res) {
       const compSize = size || '100-500 employees';
       await db.run(
         'INSERT INTO companies (id, user_id, name, email, industry, size) VALUES (?, ?, ?, ?, ?, ?)',
-        [compId, userId, name, email, compIndustry, compSize]
+        [compId, userId, name, normalizedEmail, compIndustry, compSize]
       );
       roleData = { id: compId, industry: compIndustry, size: compSize };
     }
 
-    const token = generateToken({ userId, email, role, name });
+    const token = generateToken({ userId, email: normalizedEmail, role, name });
 
     return res.status(201).json({
       success: true,
@@ -72,7 +94,7 @@ export async function signup(req, res) {
       token,
       user: {
         id: userId,
-        email,
+        email: normalizedEmail,
         role,
         name,
         avatar: defaultAvatar,
@@ -88,13 +110,24 @@ export async function signup(req, res) {
 export async function login(req, res) {
   try {
     const { email, password, role } = req.body;
+    const normalizedEmail = normalizeEmail(email);
+    const errors = [];
 
-    if (!email || !password) {
-      return res.status(400).json({ success: false, error: 'Email and password are required' });
+    requireString(normalizedEmail, 'Email', errors);
+    if (normalizedEmail && !isValidEmail(normalizedEmail)) {
+      errors.push('Email must be a valid email address');
+    }
+    requireString(password, 'Password', errors);
+    if (role) {
+      requireEnum(role, roles, 'Role', errors);
+    }
+
+    if (errors.length > 0) {
+      return sendValidationError(res, errors);
     }
 
     const db = await getDb();
-    const user = await db.get('SELECT * FROM users WHERE email = ?', [email]);
+    const user = await db.get('SELECT * FROM users WHERE email = ?', [normalizedEmail]);
 
     if (!user) {
       return res.status(401).json({ success: false, error: 'Invalid email or password' });

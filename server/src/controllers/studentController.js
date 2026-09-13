@@ -1,4 +1,33 @@
 import { getDb } from '../config/db.js';
+import { canAccessStudent } from '../utils/accessControl.js';
+import { hydrateStudent } from '../utils/formatters.js';
+import {
+  activityTypes,
+  normalizeStringArray,
+  parseInteger,
+  requireEnum,
+  requireString,
+  sendValidationError,
+  validateAcademicYear,
+  validateGpa
+} from '../utils/validation.js';
+
+async function getTargetStudentForWrite(db, user, studentId) {
+  if (user.role === 'student') {
+    return db.get('SELECT * FROM students WHERE user_id = ?', [user.userId]);
+  }
+
+  if (user.role === 'university') {
+    if (!studentId) return null;
+    const student = await db.get('SELECT * FROM students WHERE id = ?', [studentId]);
+    if (!student || !(await canAccessStudent(db, user, student))) {
+      return null;
+    }
+    return student;
+  }
+
+  return null;
+}
 
 export async function getStudentProfile(req, res) {
   try {
@@ -7,57 +36,21 @@ export async function getStudentProfile(req, res) {
 
     if (req.params.id) {
       student = await db.get('SELECT * FROM students WHERE id = ? OR user_id = ?', [req.params.id, req.params.id]);
-    } else {
+    } else if (req.user.role === 'student') {
       student = await db.get('SELECT * FROM students WHERE user_id = ?', [req.user.userId]);
+    } else {
+      return res.status(400).json({ success: false, error: 'Student id is required for this role' });
     }
 
     if (!student) {
       return res.status(404).json({ success: false, error: 'Student profile not found' });
     }
 
-    const academicRecords = await db.all('SELECT * FROM academic_records WHERE student_id = ?', [student.id]);
-    const certificates = await db.all('SELECT * FROM certificates WHERE student_id = ?', [student.id]);
-    const activities = await db.all('SELECT * FROM activities WHERE student_id = ?', [student.id]);
+    if (!(await canAccessStudent(db, req.user, student))) {
+      return res.status(403).json({ success: false, error: 'Forbidden: You cannot access this student profile' });
+    }
 
-    const formattedStudent = {
-      id: student.id,
-      userId: student.user_id,
-      name: student.name,
-      email: student.email,
-      university: student.university,
-      course: student.course,
-      year: student.year,
-      gpa: student.gpa,
-      skills: JSON.parse(student.skills || '[]'),
-      avatar: student.avatar,
-      academicRecords: academicRecords.map(r => ({
-        id: r.id,
-        semester: r.semester,
-        year: r.year,
-        gpa: r.gpa,
-        subjects: JSON.parse(r.subjects || '[]')
-      })),
-      certificates: certificates.map(c => ({
-        id: c.id,
-        studentId: c.student_id,
-        title: c.title,
-        issuer: c.issuer,
-        dateIssued: c.date_issued,
-        status: c.status,
-        type: c.type,
-        fileUrl: c.file_url
-      })),
-      activities: activities.map(a => ({
-        id: a.id,
-        type: a.type,
-        title: a.title,
-        description: a.description,
-        date: a.date,
-        hours: a.hours,
-        skills: JSON.parse(a.skills || '[]')
-      }))
-    };
-
+    const formattedStudent = await hydrateStudent(db, student);
     return res.json({ success: true, student: formattedStudent });
   } catch (error) {
     console.error('getStudentProfile error:', error);
@@ -75,23 +68,31 @@ export async function updateStudentProfile(req, res) {
     }
 
     const { name, university, course, year, gpa, skills, avatar } = req.body;
+    const errors = [];
 
-    const updatedName = name || student.name;
-    const updatedUniv = university || student.university;
-    const updatedCourse = course || student.course;
-    const updatedYear = year !== undefined ? parseInt(year) : student.year;
-    const updatedGpa = gpa !== undefined ? parseFloat(gpa) : student.gpa;
-    const updatedSkills = skills ? JSON.stringify(skills) : student.skills;
-    const updatedAvatar = avatar || student.avatar;
+    const updatedName = name !== undefined ? String(name).trim() : student.name;
+    const updatedUniv = university !== undefined ? String(university).trim() : student.university;
+    const updatedCourse = course !== undefined ? String(course).trim() : student.course;
+    const updatedAvatar = avatar !== undefined ? String(avatar).trim() : student.avatar;
+    const updatedYear = year !== undefined ? validateAcademicYear(year, 'Academic year', errors) : student.year;
+    const updatedGpa = gpa !== undefined ? validateGpa(gpa, 'GPA', errors) : student.gpa;
+    const updatedSkills = skills !== undefined ? JSON.stringify(normalizeStringArray(skills)) : student.skills;
+
+    requireString(updatedName, 'Name', errors);
+    requireString(updatedUniv, 'University', errors);
+    requireString(updatedCourse, 'Course', errors);
+
+    if (errors.length > 0) {
+      return sendValidationError(res, errors);
+    }
 
     await db.run(
-      `UPDATE students 
+      `UPDATE students
        SET name = ?, university = ?, course = ?, year = ?, gpa = ?, skills = ?, avatar = ?
        WHERE id = ?`,
       [updatedName, updatedUniv, updatedCourse, updatedYear, updatedGpa, updatedSkills, updatedAvatar, student.id]
     );
 
-    // Also update users table name/avatar
     await db.run('UPDATE users SET name = ?, avatar = ? WHERE id = ?', [updatedName, updatedAvatar, req.user.userId]);
 
     return res.json({ success: true, message: 'Profile updated successfully' });
@@ -104,37 +105,48 @@ export async function updateStudentProfile(req, res) {
 export async function addAcademicRecord(req, res) {
   try {
     const db = await getDb();
-    const student = await db.get('SELECT * FROM students WHERE user_id = ?', [req.user.userId]);
+    const student = await getTargetStudentForWrite(db, req.user, req.body.studentId);
 
     if (!student) {
-      return res.status(404).json({ success: false, error: 'Student profile not found' });
+      const status = req.user.role === 'university' ? 403 : 404;
+      return res.status(status).json({ success: false, error: 'Student profile not found or not accessible' });
     }
 
     const { semester, year, gpa, subjects } = req.body;
-    if (!semester || !year || gpa === undefined) {
-      return res.status(400).json({ success: false, error: 'Semester, year, and GPA are required' });
+    const errors = [];
+    requireString(semester, 'Semester', errors);
+
+    const recordYear = parseInteger(year);
+    if (recordYear === null || recordYear < 2000 || recordYear > 2100) {
+      errors.push('Year must be a valid calendar year');
+    }
+
+    const parsedGpa = validateGpa(gpa, 'GPA', errors);
+    const normalizedSubjects = Array.isArray(subjects) ? subjects : [];
+
+    if (errors.length > 0) {
+      return sendValidationError(res, errors);
     }
 
     const recordId = 'ar-' + Date.now();
-    const subjectsJson = JSON.stringify(subjects || []);
+    const subjectsJson = JSON.stringify(normalizedSubjects);
 
     await db.run(
       `INSERT INTO academic_records (id, student_id, semester, year, gpa, subjects)
        VALUES (?, ?, ?, ?, ?, ?)`,
-      [recordId, student.id, semester, parseInt(year), parseFloat(gpa), subjectsJson]
+      [recordId, student.id, semester.trim(), recordYear, parsedGpa, subjectsJson]
     );
 
-    // Recalculate average overall GPA for student
     const allRecords = await db.all('SELECT gpa FROM academic_records WHERE student_id = ?', [student.id]);
     if (allRecords.length > 0) {
-      const avgGpa = (allRecords.reduce((acc, r) => acc + r.gpa, 0) / allRecords.length).toFixed(2);
+      const avgGpa = (allRecords.reduce((acc, record) => acc + record.gpa, 0) / allRecords.length).toFixed(2);
       await db.run('UPDATE students SET gpa = ? WHERE id = ?', [parseFloat(avgGpa), student.id]);
     }
 
     return res.status(201).json({
       success: true,
       message: 'Academic record added successfully',
-      record: { id: recordId, semester, year, gpa: parseFloat(gpa), subjects: subjects || [] }
+      record: { id: recordId, semester: semester.trim(), year: recordYear, gpa: parsedGpa, subjects: normalizedSubjects }
     });
   } catch (error) {
     console.error('addAcademicRecord error:', error);
@@ -152,23 +164,34 @@ export async function addActivity(req, res) {
     }
 
     const { type, title, description, date, hours, skills } = req.body;
-    if (!type || !title || !description || !date || hours === undefined) {
-      return res.status(400).json({ success: false, error: 'All activity fields are required' });
+    const errors = [];
+    requireEnum(type, activityTypes, 'Activity type', errors);
+    requireString(title, 'Title', errors);
+    requireString(description, 'Description', errors);
+    requireString(date, 'Date', errors);
+
+    const parsedHours = parseInteger(hours);
+    if (parsedHours === null || parsedHours < 1 || parsedHours > 10000) {
+      errors.push('Hours must be an integer between 1 and 10000');
+    }
+
+    if (errors.length > 0) {
+      return sendValidationError(res, errors);
     }
 
     const activityId = 'act-' + Date.now();
-    const skillsJson = JSON.stringify(skills || []);
+    const normalizedSkills = normalizeStringArray(skills);
 
     await db.run(
       `INSERT INTO activities (id, student_id, type, title, description, date, hours, skills)
        VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
-      [activityId, student.id, type, title, description, date, parseInt(hours), skillsJson]
+      [activityId, student.id, type, title.trim(), description.trim(), date, parsedHours, JSON.stringify(normalizedSkills)]
     );
 
     return res.status(201).json({
       success: true,
       message: 'Activity added successfully',
-      activity: { id: activityId, type, title, description, date, hours: parseInt(hours), skills: skills || [] }
+      activity: { id: activityId, type, title: title.trim(), description: description.trim(), date, hours: parsedHours, skills: normalizedSkills }
     });
   } catch (error) {
     console.error('addActivity error:', error);

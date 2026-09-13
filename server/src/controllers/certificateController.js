@@ -1,4 +1,40 @@
+import fs from 'fs/promises';
 import { getDb } from '../config/db.js';
+import { getScopedUniversityName } from '../utils/accessControl.js';
+import {
+  certificateStatuses,
+  certificateTypes,
+  requireEnum,
+  requireString,
+  sendValidationError
+} from '../utils/validation.js';
+
+async function removeUploadedFile(file) {
+  if (!file?.path) return;
+  try {
+    await fs.unlink(file.path);
+  } catch {
+    // The request can still fail cleanly if the temporary upload was already gone.
+  }
+}
+
+function formatCertificate(certificate) {
+  return {
+    id: certificate.id,
+    studentId: certificate.student_id,
+    studentName: certificate.student_name,
+    studentEmail: certificate.student_email,
+    studentAvatar: certificate.student_avatar,
+    university: certificate.university,
+    title: certificate.title,
+    issuer: certificate.issuer,
+    dateIssued: certificate.date_issued,
+    status: certificate.status,
+    type: certificate.type,
+    fileUrl: certificate.file_url,
+    createdAt: certificate.created_at
+  };
+}
 
 export async function uploadCertificateFile(req, res) {
   try {
@@ -6,26 +42,33 @@ export async function uploadCertificateFile(req, res) {
     const student = await db.get('SELECT * FROM students WHERE user_id = ?', [req.user.userId]);
 
     if (!student) {
+      await removeUploadedFile(req.file);
       return res.status(404).json({ success: false, error: 'Student profile not found' });
     }
 
     const { title, issuer, dateIssued, type } = req.body;
+    const errors = [];
+    requireString(title, 'Title', errors);
+    requireString(issuer, 'Issuer', errors);
+    requireString(dateIssued, 'Date issued', errors);
+    requireEnum(type, certificateTypes, 'Certificate type', errors);
 
-    if (!title || !issuer || !dateIssued || !type) {
-      return res.status(400).json({ success: false, error: 'Title, issuer, date issued, and type are required' });
+    if (dateIssued && Number.isNaN(Date.parse(dateIssued))) {
+      errors.push('Date issued must be a valid date');
     }
 
-    let fileUrl = '';
-    if (req.file) {
-      fileUrl = `/uploads/certificates/${req.file.filename}`;
+    if (errors.length > 0) {
+      await removeUploadedFile(req.file);
+      return sendValidationError(res, errors);
     }
 
+    const fileUrl = req.file ? `/uploads/certificates/${req.file.filename}` : '';
     const certId = 'c-' + Date.now();
 
     await db.run(
       `INSERT INTO certificates (id, student_id, title, issuer, date_issued, status, type, file_url)
        VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
-      [certId, student.id, title, issuer, dateIssued, 'pending', type, fileUrl]
+      [certId, student.id, title.trim(), issuer.trim(), dateIssued, 'pending', type, fileUrl]
     );
 
     return res.status(201).json({
@@ -34,8 +77,8 @@ export async function uploadCertificateFile(req, res) {
       certificate: {
         id: certId,
         studentId: student.id,
-        title,
-        issuer,
+        title: title.trim(),
+        issuer: issuer.trim(),
         dateIssued,
         status: 'pending',
         type,
@@ -43,6 +86,7 @@ export async function uploadCertificateFile(req, res) {
       }
     });
   } catch (error) {
+    await removeUploadedFile(req.file);
     console.error('uploadCertificateFile error:', error);
     return res.status(500).json({ success: false, error: 'Failed to submit certificate' });
   }
@@ -61,16 +105,16 @@ export async function getMyCertificates(req, res) {
 
     return res.json({
       success: true,
-      certificates: certificates.map(c => ({
-        id: c.id,
-        studentId: c.student_id,
-        title: c.title,
-        issuer: c.issuer,
-        dateIssued: c.date_issued,
-        status: c.status,
-        type: c.type,
-        fileUrl: c.file_url,
-        createdAt: c.created_at
+      certificates: certificates.map(certificate => ({
+        id: certificate.id,
+        studentId: certificate.student_id,
+        title: certificate.title,
+        issuer: certificate.issuer,
+        dateIssued: certificate.date_issued,
+        status: certificate.status,
+        type: certificate.type,
+        fileUrl: certificate.file_url,
+        createdAt: certificate.created_at
       }))
     });
   } catch (error) {
@@ -83,6 +127,17 @@ export async function getAllCertificates(req, res) {
   try {
     const db = await getDb();
     const { status, type } = req.query;
+    const errors = [];
+
+    if (status) {
+      requireEnum(status, certificateStatuses, 'Status', errors);
+    }
+    if (type) {
+      requireEnum(type, certificateTypes, 'Certificate type', errors);
+    }
+    if (errors.length > 0) {
+      return sendValidationError(res, errors);
+    }
 
     let query = `
       SELECT c.*, s.name as student_name, s.email as student_email, s.university, s.avatar as student_avatar
@@ -101,6 +156,16 @@ export async function getAllCertificates(req, res) {
       params.push(type);
     }
 
+    if (req.user.role === 'company') {
+      conditions.push("c.status = 'approved'");
+    }
+
+    const universityName = await getScopedUniversityName(db, req.user);
+    if (universityName) {
+      conditions.push('s.university = ?');
+      params.push(universityName);
+    }
+
     if (conditions.length > 0) {
       query += ' WHERE ' + conditions.join(' AND ');
     }
@@ -111,21 +176,7 @@ export async function getAllCertificates(req, res) {
 
     return res.json({
       success: true,
-      certificates: certificates.map(c => ({
-        id: c.id,
-        studentId: c.student_id,
-        studentName: c.student_name,
-        studentEmail: c.student_email,
-        studentAvatar: c.student_avatar,
-        university: c.university,
-        title: c.title,
-        issuer: c.issuer,
-        dateIssued: c.date_issued,
-        status: c.status,
-        type: c.type,
-        fileUrl: c.file_url,
-        createdAt: c.created_at
-      }))
+      certificates: certificates.map(formatCertificate)
     });
   } catch (error) {
     console.error('getAllCertificates error:', error);
@@ -137,16 +188,29 @@ export async function updateCertificateStatus(req, res) {
   try {
     const { id } = req.params;
     const { status } = req.body;
+    const errors = [];
+    requireEnum(status, certificateStatuses, 'Status', errors);
 
-    if (!['approved', 'rejected', 'pending'].includes(status)) {
-      return res.status(400).json({ success: false, error: 'Invalid status value' });
+    if (errors.length > 0) {
+      return sendValidationError(res, errors);
     }
 
     const db = await getDb();
-    const certificate = await db.get('SELECT * FROM certificates WHERE id = ?', [id]);
+    const certificate = await db.get(
+      `SELECT c.*, s.university
+       FROM certificates c
+       JOIN students s ON c.student_id = s.id
+       WHERE c.id = ?`,
+      [id]
+    );
 
     if (!certificate) {
       return res.status(404).json({ success: false, error: 'Certificate not found' });
+    }
+
+    const universityName = await getScopedUniversityName(db, req.user);
+    if (!universityName || certificate.university !== universityName) {
+      return res.status(403).json({ success: false, error: 'Forbidden: You cannot update this certificate' });
     }
 
     await db.run('UPDATE certificates SET status = ? WHERE id = ?', [status, id]);
