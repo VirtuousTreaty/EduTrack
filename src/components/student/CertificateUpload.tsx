@@ -169,7 +169,7 @@ const CertificateUpload: React.FC<CertificateUploadProps> = ({ certificates: ini
           <div className="bg-white rounded-xl p-6 w-full max-w-md shadow-2xl border border-slate-200">
             <div className="flex justify-between items-center mb-4">
               <h4 className="text-lg font-bold text-gray-900">Upload Certificate Document</h4>
-              <button onClick={() => setShowUploadForm(false)} className="text-gray-400 hover:text-gray-600 text-xl font-bold">×</button>
+              <button onClick={() => setShowUploadForm(false)} className="text-gray-400 hover:text-gray-600 text-xl font-bold">x</button>
             </div>
 
             <form onSubmit={handleSubmit} className="space-y-4">

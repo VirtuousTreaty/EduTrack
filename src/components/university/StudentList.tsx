@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { Student } from '../../types';
-import { Search, Eye, GraduationCap, Award, Activity, Loader2 } from 'lucide-react';
+import { Search, Eye, GraduationCap, Loader2 } from 'lucide-react';
 import { api } from '../../services/api';
 
 const StudentList: React.FC = () => {
@@ -11,7 +11,7 @@ const StudentList: React.FC = () => {
   const [selectedStudent, setSelectedStudent] = useState<Student | null>(null);
   const [loading, setLoading] = useState(true);
 
-  const fetchStudents = async () => {
+  const fetchStudents = useCallback(async () => {
     try {
       setLoading(true);
       const res = await api.getUniversityStudents({
@@ -27,14 +27,14 @@ const StudentList: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [searchTerm, selectedCourse, selectedYear]);
 
   useEffect(() => {
     const timer = setTimeout(() => {
       fetchStudents();
     }, 300);
     return () => clearTimeout(timer);
-  }, [searchTerm, selectedCourse, selectedYear]);
+  }, [fetchStudents]);
 
   return (
     <div className="p-6">
@@ -109,7 +109,7 @@ const StudentList: React.FC = () => {
                 <div className="flex-1">
                   <h3 className="font-bold text-slate-900 text-base">{student.name}</h3>
                   <p className="text-xs font-medium text-slate-600">{student.course}</p>
-                  <p className="text-xs text-slate-500 mt-0.5">Year {student.year} • {student.university}</p>
+                  <p className="text-xs text-slate-500 mt-0.5">Year {student.year} - {student.university}</p>
                 </div>
               </div>
 
@@ -166,7 +166,7 @@ const StudentList: React.FC = () => {
           <div className="bg-white rounded-xl p-6 w-full max-w-3xl max-h-[90vh] overflow-y-auto shadow-2xl border border-slate-200">
             <div className="flex justify-between items-start mb-4">
               <h3 className="text-xl font-extrabold text-slate-900">Student Profile & Transcripts</h3>
-              <button onClick={() => setSelectedStudent(null)} className="text-slate-400 hover:text-slate-600 text-2xl font-bold">×</button>
+              <button onClick={() => setSelectedStudent(null)} className="text-slate-400 hover:text-slate-600 text-2xl font-bold">x</button>
             </div>
 
             <div className="space-y-6">
@@ -178,7 +178,7 @@ const StudentList: React.FC = () => {
                 />
                 <div>
                   <h4 className="text-lg font-bold text-slate-900">{selectedStudent.name}</h4>
-                  <p className="text-xs font-semibold text-slate-600">{selectedStudent.course} • Year {selectedStudent.year}</p>
+                  <p className="text-xs font-semibold text-slate-600">{selectedStudent.course} - Year {selectedStudent.year}</p>
                   <p className="text-xs text-slate-500">{selectedStudent.university} ({selectedStudent.email})</p>
                   <span className="inline-block mt-2 px-3 py-0.5 bg-blue-100 text-blue-800 text-xs font-bold rounded-full">
                     Overall GPA: {selectedStudent.gpa} / 4.0
@@ -225,7 +225,7 @@ const StudentList: React.FC = () => {
                     <div key={cert.id} className="p-3 bg-slate-50 border rounded-lg text-xs flex justify-between items-center">
                       <div>
                         <p className="font-bold text-slate-900">{cert.title}</p>
-                        <p className="text-slate-500">{cert.issuer} • Issued {new Date(cert.dateIssued).toLocaleDateString()}</p>
+                        <p className="text-slate-500">{cert.issuer} - Issued {new Date(cert.dateIssued).toLocaleDateString()}</p>
                       </div>
                       <span className={`px-2 py-0.5 rounded text-[11px] font-bold ${
                         cert.status === 'approved' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'

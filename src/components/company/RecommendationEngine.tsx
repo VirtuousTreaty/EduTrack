@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Bot, Sparkles, Target, Eye, Download, Loader2 } from 'lucide-react';
+import { Bot, Sparkles, Target, Download, Loader2 } from 'lucide-react';
 import { api } from '../../services/api';
 import jsPDF from 'jspdf';
 
@@ -186,7 +186,7 @@ const RecommendationEngine: React.FC = () => {
                         <div className="flex justify-between items-start">
                           <div>
                             <h5 className="font-bold text-slate-900 text-base">{s.name}</h5>
-                            <p className="text-xs font-medium text-slate-600">{s.course} • Year {s.year}</p>
+                            <p className="text-xs font-medium text-slate-600">{s.course} - Year {s.year}</p>
                             <p className="text-xs text-slate-500">{s.university}</p>
                           </div>
                           <div className="text-right">

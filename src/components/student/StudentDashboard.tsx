@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import Layout from '../Layout';
-import { useAuth } from '../../contexts/AuthContext';
 import { Student } from '../../types';
 import AcademicRecords from './AcademicRecords';
 import CertificateUpload from './CertificateUpload';
@@ -10,7 +9,6 @@ import { BookOpen, Award, FileText, BarChart3, Upload, User, Loader2, Plus, Spar
 import { api } from '../../services/api';
 
 const StudentDashboard: React.FC = () => {
-  const { user } = useAuth();
   const [activeTab, setActiveTab] = useState('overview');
   const [studentData, setStudentData] = useState<Student | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -186,7 +184,7 @@ const StudentDashboard: React.FC = () => {
             <div className="bg-white rounded-xl p-6 w-full max-w-md shadow-2xl border border-slate-200">
               <div className="flex justify-between items-center mb-4">
                 <h4 className="text-lg font-bold text-slate-900">Add Academic Semester Record</h4>
-                <button onClick={() => setShowAddRecordModal(false)} className="text-slate-400 hover:text-slate-600 font-bold text-xl">×</button>
+                <button onClick={() => setShowAddRecordModal(false)} className="text-slate-400 hover:text-slate-600 font-bold text-xl">x</button>
               </div>
               <form onSubmit={handleAddAcademicRecord} className="space-y-4">
                 <div>
@@ -237,7 +235,7 @@ const StudentDashboard: React.FC = () => {
             <div className="bg-white rounded-xl p-6 w-full max-w-md shadow-2xl border border-slate-200">
               <div className="flex justify-between items-center mb-4">
                 <h4 className="text-lg font-bold text-slate-900">Add Co-Curricular / Extracurricular Activity</h4>
-                <button onClick={() => setShowAddActivityModal(false)} className="text-slate-400 hover:text-slate-600 font-bold text-xl">×</button>
+                <button onClick={() => setShowAddActivityModal(false)} className="text-slate-400 hover:text-slate-600 font-bold text-xl">x</button>
               </div>
               <form onSubmit={handleAddActivity} className="space-y-3">
                 <div>
@@ -343,7 +341,7 @@ const StudentOverview: React.FC<{
               Verified Student
             </span>
           </div>
-          <p className="text-slate-600 font-medium mt-1">{student.course} • Year {student.year}</p>
+          <p className="text-slate-600 font-medium mt-1">{student.course} - Year {student.year}</p>
           <p className="text-slate-500 text-sm">{student.university}</p>
           <div className="mt-3 flex items-center space-x-3">
             <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-blue-100 text-blue-800 border border-blue-200">

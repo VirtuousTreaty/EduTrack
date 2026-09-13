@@ -138,7 +138,7 @@ const AcademicRecords: React.FC<AcademicRecordsProps> = ({ records }) => {
 
                     <p className="text-sm text-gray-500 mt-1">
                       {record.subjects.length} subjects
-                      <span className="mx-2">•</span>
+                      <span className="mx-2">-</span>
                       {totalCredits} credits
                     </p>
                   </div>

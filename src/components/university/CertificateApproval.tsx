@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { Certificate } from '../../types';
 import { Check, X, Eye, Clock, Award, Filter, ExternalLink, Loader2 } from 'lucide-react';
 import { api } from '../../services/api';
@@ -16,7 +16,7 @@ const CertificateApproval: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [processingId, setProcessingId] = useState<string | null>(null);
 
-  const fetchCertificates = async () => {
+  const fetchCertificates = useCallback(async () => {
     try {
       setLoading(true);
       const res = await api.getAllCertificates(filter === 'all' ? undefined : filter);
@@ -28,11 +28,11 @@ const CertificateApproval: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [filter]);
 
   useEffect(() => {
     fetchCertificates();
-  }, [filter]);
+  }, [fetchCertificates]);
 
   const handleApprove = async (certId: string) => {
     try {
@@ -227,7 +227,7 @@ const CertificateApproval: React.FC = () => {
           <div className="bg-white rounded-xl p-6 w-full max-w-xl shadow-2xl border border-slate-200">
             <div className="flex justify-between items-start mb-4">
               <h3 className="text-xl font-extrabold text-slate-900">Certificate Verification Review</h3>
-              <button onClick={() => setSelectedCertificate(null)} className="text-slate-400 hover:text-slate-600 text-2xl font-bold">×</button>
+              <button onClick={() => setSelectedCertificate(null)} className="text-slate-400 hover:text-slate-600 text-2xl font-bold">x</button>
             </div>
 
             <div className="space-y-4">

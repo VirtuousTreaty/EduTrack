@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Download, FileText, Users, TrendingUp, Award, Loader2 } from 'lucide-react';
+import { Download, Users, TrendingUp, Award, Loader2 } from 'lucide-react';
 import jsPDF from 'jspdf';
 import { api } from '../../services/api';
 

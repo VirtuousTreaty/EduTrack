@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { Student } from '../../types';
-import { Search, GraduationCap, Award, MapPin, Eye, Download, Loader2 } from 'lucide-react';
+import { Search, MapPin, Eye, Download, Loader2 } from 'lucide-react';
 import jsPDF from 'jspdf';
 import { api } from '../../services/api';
 
@@ -14,7 +14,7 @@ const StudentSearch: React.FC = () => {
   const [selectedStudent, setSelectedStudent] = useState<Student | null>(null);
   const [loading, setLoading] = useState(true);
 
-  const fetchCandidates = async () => {
+  const fetchCandidates = useCallback(async () => {
     try {
       setLoading(true);
       const res = await api.searchCandidates({
@@ -32,14 +32,14 @@ const StudentSearch: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [courseFilter, minGPA, searchTerm, skillFilter, yearFilter]);
 
   useEffect(() => {
     const timer = setTimeout(() => {
       fetchCandidates();
     }, 300);
     return () => clearTimeout(timer);
-  }, [searchTerm, skillFilter, courseFilter, minGPA, yearFilter]);
+  }, [fetchCandidates]);
 
   const downloadStudentResume = (student: Student) => {
     const pdf = new jsPDF();
@@ -244,7 +244,7 @@ const StudentSearch: React.FC = () => {
           <div className="bg-white rounded-xl p-6 w-full max-w-3xl max-h-[90vh] overflow-y-auto shadow-2xl border border-slate-200">
             <div className="flex justify-between items-start mb-4">
               <h3 className="text-xl font-extrabold text-slate-900">Candidate Portfolio Overview</h3>
-              <button onClick={() => setSelectedStudent(null)} className="text-slate-400 hover:text-slate-600 text-2xl font-bold">×</button>
+              <button onClick={() => setSelectedStudent(null)} className="text-slate-400 hover:text-slate-600 text-2xl font-bold">x</button>
             </div>
 
             <div className="space-y-5">
@@ -256,7 +256,7 @@ const StudentSearch: React.FC = () => {
                 />
                 <div>
                   <h4 className="text-lg font-bold text-slate-900">{selectedStudent.name}</h4>
-                  <p className="text-xs font-semibold text-slate-600">{selectedStudent.course} • Year {selectedStudent.year}</p>
+                  <p className="text-xs font-semibold text-slate-600">{selectedStudent.course} - Year {selectedStudent.year}</p>
                   <p className="text-xs text-slate-500">{selectedStudent.university} ({selectedStudent.email})</p>
                   <span className="inline-block mt-2 px-3 py-0.5 bg-purple-100 text-purple-800 text-xs font-bold rounded-full">
                     GPA: {selectedStudent.gpa} / 4.0
@@ -285,7 +285,7 @@ const StudentSearch: React.FC = () => {
                       <div key={c.id} className="p-3 bg-emerald-50 border border-emerald-200 rounded-lg text-xs flex justify-between items-center">
                         <div>
                           <p className="font-bold text-emerald-900">{c.title}</p>
-                          <p className="text-emerald-700">{c.issuer} • Issued {new Date(c.dateIssued).toLocaleDateString()}</p>
+                          <p className="text-emerald-700">{c.issuer} - Issued {new Date(c.dateIssued).toLocaleDateString()}</p>
                         </div>
                         <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-300">
                           VERIFIED

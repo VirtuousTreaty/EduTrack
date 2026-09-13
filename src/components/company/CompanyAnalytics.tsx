@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
-import { Users, TrendingUp, Star, Award, Loader2 } from 'lucide-react';
+import { Users, TrendingUp, Award, Loader2 } from 'lucide-react';
 import { api } from '../../services/api';
 
 const CompanyAnalytics: React.FC = () => {

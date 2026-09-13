@@ -58,7 +58,7 @@ const StudentPortfolio: React.FC = () => {
     pdf.setFontSize(16);
     pdf.text('Technical Skills', 20, 75);
     pdf.setFontSize(10);
-    const skillsText = student.skills.join(' • ');
+    const skillsText = student.skills.join(' - ');
     pdf.text(skillsText, 20, 85, { maxWidth: 170 });
     
     // Academic Performance
@@ -67,7 +67,7 @@ const StudentPortfolio: React.FC = () => {
     pdf.setFontSize(10);
     
     let yPos = 115;
-    student.academicRecords.forEach((record, index) => {
+    student.academicRecords.forEach((record) => {
       if (yPos > 250) {
         pdf.addPage();
         yPos = 30;
@@ -98,7 +98,7 @@ const StudentPortfolio: React.FC = () => {
           yPos = 30;
         }
         
-        pdf.text(`• ${cert.title} - ${cert.issuer}`, 25, yPos);
+        pdf.text(`- ${cert.title} - ${cert.issuer}`, 25, yPos);
         pdf.text(`  Issued: ${new Date(cert.dateIssued).toLocaleDateString()}`, 25, yPos + 8);
         
         yPos += 20;
@@ -121,7 +121,7 @@ const StudentPortfolio: React.FC = () => {
         yPos = 30;
       }
       
-      pdf.text(`• ${activity.title}`, 25, yPos);
+      pdf.text(`- ${activity.title}`, 25, yPos);
       pdf.text(`  ${activity.description}`, 25, yPos + 8, { maxWidth: 160 });
       pdf.text(`  Type: ${activity.type} | Hours: ${activity.hours} | Skills: ${activity.skills.slice(0, 3).join(', ')}`, 25, yPos + 16);
       
@@ -274,7 +274,7 @@ const StudentPortfolio: React.FC = () => {
                           {student.activities[0].title}
                         </p>
                         <p className="text-xs text-blue-700">
-                          {student.activities[0].hours} hours • {student.activities[0].type}
+                          {student.activities[0].hours} hours - {student.activities[0].type}
                         </p>
                       </div>
                     </div>
@@ -320,7 +320,7 @@ const StudentPortfolio: React.FC = () => {
                   />
                   <div>
                     <h3 className="text-2xl font-bold">{selectedStudent.name}</h3>
-                    <p className="text-purple-100">{selectedStudent.course} • Year {selectedStudent.year}</p>
+                    <p className="text-purple-100">{selectedStudent.course} - Year {selectedStudent.year}</p>
                     <p className="text-purple-200">{selectedStudent.email}</p>
                     <div className="flex items-center space-x-2 mt-2">
                       <MapPin className="w-4 h-4" />
@@ -340,7 +340,7 @@ const StudentPortfolio: React.FC = () => {
                     onClick={() => setSelectedStudent(null)}
                     className="text-white/80 hover:text-white text-2xl w-10 h-10 flex items-center justify-center"
                   >
-                    ×
+                    x
                   </button>
                 </div>
               </div>
@@ -406,7 +406,7 @@ const StudentPortfolio: React.FC = () => {
                             <div>
                               <h5 className="font-medium text-gray-900">{record.semester} {record.year}</h5>
                               <p className="text-sm text-gray-600">
-                                {record.subjects.length} courses • {record.subjects.reduce((sum, s) => sum + s.credits, 0)} credits
+                                {record.subjects.length} courses - {record.subjects.reduce((sum, s) => sum + s.credits, 0)} credits
                               </p>
                             </div>
                             <span className={`inline-flex items-center px-2 py-1 rounded-full text-sm font-medium ${getGPAColor(record.gpa)}`}>

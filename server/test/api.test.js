@@ -14,6 +14,7 @@ process.env.DB_PATH = path.join(tempDir, 'edutrack.sqlite');
 const { app } = await import('../src/app.js');
 const { closeDb } = await import('../src/config/db.js');
 const { seed } = await import('../src/seeds/seed.js');
+const { seedDemo } = await import('../src/seeds/demoSeed.js');
 
 before(async () => {
   await seed();
@@ -168,4 +169,52 @@ test('invalid signup payload is rejected', async () => {
     .expect(400);
 
   assert.equal(response.body.success, false);
+});
+
+test('presentation demo accounts can access their role dashboards', async () => {
+  await seedDemo();
+
+  const demoPassword = 'Password@123';
+
+  async function loginDemo(email, role) {
+    const response = await request(app)
+      .post('/api/auth/login')
+      .send({ email, password: demoPassword, role })
+      .expect(200);
+
+    assert.equal(response.body.success, true);
+    assert.equal(response.body.user.role, role);
+    assert.ok(response.body.token);
+    return response.body.token;
+  }
+
+  const studentToken = await loginDemo('aarav@student.edu', 'student');
+  const studentProfile = await request(app)
+    .get('/api/students/profile')
+    .set(auth(studentToken))
+    .expect(200);
+
+  assert.equal(studentProfile.body.student.email, 'aarav@student.edu');
+  assert.ok(studentProfile.body.student.academicRecords.length >= 1);
+
+  const universityToken = await loginDemo('registrar@kiet.edu', 'university');
+  const universityStudents = await request(app)
+    .get('/api/university/students')
+    .set(auth(universityToken))
+    .expect(200);
+
+  assert.ok(universityStudents.body.students.length >= 4);
+
+  const companyToken = await loginDemo('talent@novacore.com', 'company');
+  const candidates = await request(app)
+    .get('/api/company/students')
+    .set(auth(companyToken))
+    .expect(200);
+
+  assert.ok(candidates.body.students.length >= 1);
+  assert.ok(
+    candidates.body.students.every(student =>
+      student.certificates.every(certificate => certificate.status === 'approved')
+    )
+  );
 });

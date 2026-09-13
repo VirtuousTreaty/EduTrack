@@ -1,25 +1,7 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { User } from '../types';
 import { api } from '../services/api';
-
-interface AuthContextType {
-  user: User | null;
-  login: (email: string, password: string, role: 'student' | 'university' | 'company') => Promise<{ success: boolean; error?: string }>;
-  signup: (data: any) => Promise<{ success: boolean; error?: string }>;
-  logout: () => void;
-  isAuthenticated: boolean;
-  loading: boolean;
-}
-
-const AuthContext = createContext<AuthContextType | undefined>(undefined);
-
-export const useAuth = () => {
-  const context = useContext(AuthContext);
-  if (context === undefined) {
-    throw new Error('useAuth must be used within an AuthProvider');
-  }
-  return context;
-};
+import { AuthContext, AuthRole, AuthResult, SignupPayload } from './authContextValue';
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
@@ -53,7 +35,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     checkAuthStatus();
   }, []);
 
-  const login = async (email: string, password: string, role: 'student' | 'university' | 'company'): Promise<{ success: boolean; error?: string }> => {
+  const login = async (email: string, password: string, role: AuthRole): Promise<AuthResult> => {
     try {
       const response = await api.login({ email, password, role });
       if (response.success && response.token) {
@@ -68,7 +50,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  const signup = async (data: any): Promise<{ success: boolean; error?: string }> => {
+  const signup = async (data: SignupPayload): Promise<AuthResult> => {
     try {
       const response = await api.signup(data);
       if (response.success && response.token) {

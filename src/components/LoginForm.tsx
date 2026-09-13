@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useAuth } from '../contexts/AuthContext';
+import { useAuth } from '../hooks/useAuth';
 import { GraduationCap, Building2, Briefcase, Loader2, UserPlus, LogIn, Sparkles } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
