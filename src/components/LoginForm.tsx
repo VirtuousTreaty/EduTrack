@@ -64,11 +64,10 @@ const LoginForm: React.FC = () => {
     setError('');
   };
 
-  const useAnshikaDemo = () => {
+  const useDemoCredentials = () => {
     setMode('login');
-    setSelectedRole('student');
-    setEmail(demoCredentials.student.email);
-    setPassword(demoCredentials.student.password);
+    setEmail(currentDemo.email);
+    setPassword(currentDemo.password);
     setError('');
   };
 
@@ -330,11 +329,11 @@ const LoginForm: React.FC = () => {
               {mode === 'login' && (
                 <button
                   type="button"
-                  onClick={useAnshikaDemo}
+                  onClick={useDemoCredentials}
                   className="flex w-full items-center justify-center gap-2 rounded-lg border border-slate-300 bg-white px-4 py-3 text-sm font-semibold text-slate-800 transition-colors hover:border-slate-500 hover:bg-slate-50"
                 >
                   <GraduationCap className="h-4 w-4" />
-                  <span>Use Anshika Demo</span>
+                  <span>Use demo</span>
                 </button>
               )}
 
